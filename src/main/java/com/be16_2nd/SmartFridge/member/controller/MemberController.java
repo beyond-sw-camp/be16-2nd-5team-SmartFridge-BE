@@ -7,12 +7,17 @@ import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.dto.LoginReqDto;
 import com.be16_2nd.SmartFridge.member.dto.LoginResDto;
 import com.be16_2nd.SmartFridge.member.dto.MemberCreateDto;
+import com.be16_2nd.SmartFridge.member.dto.MemberResDto;
 import com.be16_2nd.SmartFridge.member.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,11 +28,11 @@ public class MemberController {
 
     @PostMapping("/create")
     public ResponseEntity<?> save(@RequestBody @Valid MemberCreateDto memberCreateDto){
-        Long id = memberService.save(memberCreateDto);
+        UUID id = memberService.save(memberCreateDto);
         return new ResponseEntity<>(
                 CommonDto.builder()
                         .result(id)
-                        .status_code(HttpStatus.OK.value())
+                        .status_code(HttpStatus.CREATED.value())
                         .status_message("회원가입을 축하합니다!")
                         .build(),HttpStatus.CREATED);
     }
@@ -50,6 +55,29 @@ public class MemberController {
                         .build(), HttpStatus.OK);
     }
 
+    @GetMapping("/list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> findAll(){
+        List<MemberResDto> memberResDtoList = memberService.findAll();
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(memberResDtoList)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("회원목록 조회 완료")
+                        .build(),HttpStatus.OK);
+    }
+
+    @GetMapping("/myinfo")
+    public ResponseEntity<?> myinfo(){
+
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(memberService.myInfo())
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("내 정보 페이지입니다.")
+                        .build(),HttpStatus.OK);
+    }
+
     @DeleteMapping("/delete")
     public ResponseEntity<?> delete(){
         memberService.delete();
@@ -57,7 +85,7 @@ public class MemberController {
                 CommonDto.builder()
                         .result("OK")
                         .status_code(HttpStatus.OK.value())
-                        .status_message("회원탈퇴가 성공적으로 되었습니다. \n" +
+                        .status_message("회원탈퇴가 성공적으로 되었습니다. \n"  +
                                 "그동안 저희 Smart Fridge를 이용해주셔서 감사합니다.")
                         .build(), HttpStatus.OK);
     }

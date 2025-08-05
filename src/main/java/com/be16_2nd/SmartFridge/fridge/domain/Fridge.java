@@ -4,10 +4,14 @@ import com.be16_2nd.SmartFridge.common.domain.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@Setter
 @Builder
 @ToString
 public class Fridge extends BaseTimeEntity {
@@ -18,6 +22,13 @@ public class Fridge extends BaseTimeEntity {
     @Column(nullable = false)
     private String fridgeName;
     private String description;
+
+    @Column(unique = true)
+    private String inviteCode;
+
+    @OneToMany(mappedBy = "fridge", cascade = CascadeType.PERSIST)
+    @Builder.Default
+    List<FridgeMember> fridgeMemberList = new ArrayList<>();
 
 }
 

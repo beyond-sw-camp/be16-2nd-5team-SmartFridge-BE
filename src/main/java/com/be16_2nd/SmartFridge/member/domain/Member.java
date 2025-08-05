@@ -1,11 +1,14 @@
 package com.be16_2nd.SmartFridge.member.domain;
 
 import com.be16_2nd.SmartFridge.common.domain.BaseTimeEntity;
+import com.be16_2nd.SmartFridge.fridge.domain.FridgeMember;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Where;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @AllArgsConstructor
@@ -17,8 +20,9 @@ import java.time.LocalDateTime;
 @Setter
 public class Member extends BaseTimeEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue
+    @Column(nullable = false, updatable = false)
+    private UUID id;
     @Column(length = 10, nullable = false)
     private String name;
     @Column(length = 50, unique = true, nullable = false)

@@ -3,6 +3,7 @@ package com.be16_2nd.SmartFridge.member.service;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.dto.LoginReqDto;
 import com.be16_2nd.SmartFridge.member.dto.MemberCreateDto;
+import com.be16_2nd.SmartFridge.member.dto.MemberResDto;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -20,7 +24,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public Long save(MemberCreateDto memberCreateDto){
+    public UUID save(MemberCreateDto memberCreateDto){
         if (memberRepository.findByEmail(memberCreateDto.getEmail()).isPresent()){
             throw new IllegalArgumentException("이미 존재하는 이메일 입니다.");
         }
@@ -42,6 +46,19 @@ public class MemberService {
             throw new IllegalArgumentException("id, email또는 비밀번호가 일치하지 않습니다.");
         }
         return optionalMember.get();
+    }
+
+    @Transactional(readOnly = true)
+    public List<MemberResDto> findAll(){
+        return memberRepository.findAll().stream()
+                .map(m->MemberResDto.fromEntity(m)).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public MemberResDto myInfo(){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = memberRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("member is not found"));
+        return MemberResDto.fromEntity(member);
     }
 
     public void delete(){
