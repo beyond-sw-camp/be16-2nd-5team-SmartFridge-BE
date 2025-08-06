@@ -21,8 +21,7 @@ public class FridgeController {
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody @Valid FridgeCreateDto fridgeCreateDto){
         return new ResponseEntity<>(
-                CommonDto
-                        .builder()
+                CommonDto.builder()
                         .result(fridgeService.create(fridgeCreateDto))
                         .status_code(HttpStatus.CREATED.value())
                         .status_message(fridgeCreateDto.getFridgeName() + "냉장고가 생성되었습니다!")

@@ -26,7 +26,7 @@ public class Fridge extends BaseTimeEntity {
     @Column(unique = true)
     private String inviteCode;
 
-    @OneToMany(mappedBy = "fridge", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "fridge", cascade = CascadeType.ALL)
     @Builder.Default
     List<FridgeMember> fridgeMemberList = new ArrayList<>();
 
