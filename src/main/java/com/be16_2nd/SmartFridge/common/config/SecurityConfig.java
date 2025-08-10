@@ -1,5 +1,8 @@
-package com.be16_2nd.SmartFridge.common.auth;
+package com.be16_2nd.SmartFridge.common.config;
 
+import com.be16_2nd.SmartFridge.common.auth.JwtAuthenticationHandler;
+import com.be16_2nd.SmartFridge.common.auth.JwtAuthorizationHandler;
+import com.be16_2nd.SmartFridge.common.auth.JwtTokenFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
