@@ -1,10 +1,8 @@
 package com.be16_2nd.SmartFridge.member.domain;
 
 import com.be16_2nd.SmartFridge.common.domain.BaseTimeEntity;
-import com.be16_2nd.SmartFridge.fridge.domain.FridgeMember;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Where;
 
 import java.time.LocalDateTime;
@@ -36,7 +34,9 @@ public class Member extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private Provider provider = Provider.LOCAL;
+    private SocialType socialType = SocialType.LOCAL;
+
+    private String socialId;
 
     @Builder.Default
     private String delYn = "N";
