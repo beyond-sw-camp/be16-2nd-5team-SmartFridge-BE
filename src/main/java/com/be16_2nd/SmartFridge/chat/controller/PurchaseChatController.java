@@ -53,7 +53,7 @@ public class PurchaseChatController {
     }
 
     //    그룹채팅목록조회
-    @GetMapping("/list/{fridgeId}")
+    @GetMapping("/room/list/{fridgeId}")
     public ResponseEntity<?> getPurchaseChatRooms(@PathVariable Long fridgeId){
         return new ResponseEntity<>(CommonDto.builder()
                 .result(chatService.getPurchaseChatRooms(fridgeId))

@@ -322,6 +322,7 @@ public class ChatService {
         // 1대1채팅일 경우
         if (chatRoomType.equals(ChatRoomType.MANAGER)){
 //            채팅방참여자 검증
+            managerChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("해당 채팅방이 존재하지 않습니다"));
             chatRoomParticipantValidator.validateManagerRoomParticipant(member.getEmail(), roomId);
             String pattern = "manager/chat/"+roomId+"/";
             return chatImageService.uploadImages(files, pattern);
@@ -329,6 +330,7 @@ public class ChatService {
         // 공동구매채팅일 경우
         else{
 //            채팅방참여자 검증
+            purchaseChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("해당 채팅방이 존재하지 않습니다"));
             chatRoomParticipantValidator.validatePurchaseRoomParticipant(member.getEmail(), roomId);
             String pattern = "manager/chat/"+roomId+"/";
             return chatImageService.uploadImages(files, pattern);
