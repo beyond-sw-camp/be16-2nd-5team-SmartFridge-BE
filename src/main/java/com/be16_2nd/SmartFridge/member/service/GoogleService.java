@@ -2,7 +2,6 @@ package com.be16_2nd.SmartFridge.member.service;
 
 import com.be16_2nd.SmartFridge.member.dto.AccessTokenDto;
 import com.be16_2nd.SmartFridge.member.dto.GoogleProfileDto;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -14,6 +13,7 @@ import org.springframework.web.client.RestClient;
 @Service
 @Transactional
 public class GoogleService {
+
     @Value("${oauth.google.client-id}")
     private String googleClientId;
 
@@ -40,14 +40,13 @@ public class GoogleService {
                 .uri("https://oauth2.googleapis.com/token")
                 .header("Content-Type", "application/x-www-form-urlencoded")
 //                ?code=xxxx&client_id=yyyy&...
-
                 .body(params)
 //                retrieve:응답 body값 만을 추출
                 .retrieve()
                 .toEntity(AccessTokenDto.class);
 
-        System.out.println("응답 accessToken json" + response.getBody());
         return response.getBody();
+
     }
 
     public GoogleProfileDto getGoogleProfile(String token){

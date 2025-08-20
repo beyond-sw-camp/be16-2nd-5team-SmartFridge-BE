@@ -21,11 +21,10 @@ public class Member extends BaseTimeEntity {
     @GeneratedValue
     @Column(nullable = false, updatable = false)
     private UUID id;
-    @Column(length = 10, nullable = false)
+    @Column(length = 10)
     private String name;
-    @Column(length = 50, unique = true, nullable = false)
+    @Column(length = 50, unique = true)
     private String email;
-    @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
