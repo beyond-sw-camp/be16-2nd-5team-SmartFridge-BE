@@ -2,7 +2,6 @@ package com.be16_2nd.SmartFridge.chat.dto;
 
 import com.be16_2nd.SmartFridge.chat.domain.ChatMessage;
 import com.be16_2nd.SmartFridge.chat.domain.ChatMessageImage;
-import com.be16_2nd.SmartFridge.chat.domain.ChatRoomType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

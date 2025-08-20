@@ -1,7 +1,6 @@
 package com.be16_2nd.SmartFridge.chat.controller;
 
 import com.be16_2nd.SmartFridge.chat.domain.ChatMessage;
-import com.be16_2nd.SmartFridge.chat.domain.ChatRoomType;
 import com.be16_2nd.SmartFridge.chat.dto.ChatMessageDto;
 import com.be16_2nd.SmartFridge.chat.service.ChatRedisPubSubService;
 import com.be16_2nd.SmartFridge.chat.service.ChatService;
