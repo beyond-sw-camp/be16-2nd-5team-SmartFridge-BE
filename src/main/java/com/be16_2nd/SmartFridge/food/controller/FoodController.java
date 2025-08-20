@@ -1,11 +1,7 @@
 package com.be16_2nd.SmartFridge.food.controller;
 
 import com.be16_2nd.SmartFridge.common.dto.CommonDto;
-import com.be16_2nd.SmartFridge.food.domain.Food;
-import com.be16_2nd.SmartFridge.food.dto.FoodCreateDto;
-import com.be16_2nd.SmartFridge.food.dto.FoodResDto;
-import com.be16_2nd.SmartFridge.food.dto.FoodSearchDto;
-import com.be16_2nd.SmartFridge.food.dto.FoodUpdateDto;
+import com.be16_2nd.SmartFridge.food.dto.*;
 import com.be16_2nd.SmartFridge.food.service.FoodService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,93 +13,79 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/food")
+@RequestMapping("/fridge/{fridgeId}/food")
 public class FoodController {
+
     private final FoodService foodService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerFood(@RequestBody @Valid FoodCreateDto foodCreateDto) {
-        Food food = foodService.registerFood(foodCreateDto);
-        return new  ResponseEntity<>(
+    public ResponseEntity<?> registerFood(@PathVariable("fridgeId") Long fridgeId,
+                                          @RequestBody @Valid FoodCreateDto foodCreateDto) {
+        FoodResDto foodResponse = foodService.registerFood(fridgeId, foodCreateDto);
+        return new ResponseEntity<>(
                 CommonDto.builder()
-                        .result(food)
+                        .result(foodResponse)
                         .status_code(HttpStatus.CREATED.value())
-                        .status_message("상품등록완료")
-                        .build()
-                , HttpStatus.CREATED);
+                        .status_message("식품 등록 완료")
+                        .build(),
+                HttpStatus.CREATED);
     }
 
-    @GetMapping("/list/shared")
-    public ResponseEntity<?> SharedFoodsList(Pageable pageable, @ModelAttribute FoodSearchDto foodSearchDto) {
-        Page<FoodResDto> foodResDtoList = foodService.findAll(pageable,foodSearchDto, true);
+    @GetMapping("/list")
+    public ResponseEntity<?> foodList(@PathVariable("fridgeId") Long fridgeId,
+                                         Pageable pageable,
+                                         @ModelAttribute FoodSearchDto foodSearchDto,
+                                         @RequestParam(required = false) Boolean isShared) {
+        Page<FoodResDto> foodResDtoList = foodService.getFoodsByRole(fridgeId, pageable, foodSearchDto, isShared);
         return new ResponseEntity<>(
                 CommonDto.builder()
                         .result(foodResDtoList)
                         .status_code(HttpStatus.OK.value())
-                        .status_message("공유 식품 목록 조회 완료")
+                        .status_message("식품 목록 조회 완료")
                         .build(),
                 HttpStatus.OK);
     }
 
-    @GetMapping("/list/nonshared")
-    public ResponseEntity<?> NonSharedFoodsList(Pageable pageable, @ModelAttribute FoodSearchDto foodSearchDto) {
-        Page<FoodResDto> foodResDtoList = foodService.findAll(pageable,foodSearchDto, false);
-        return new ResponseEntity<>(
-                CommonDto.builder()
-                        .result(foodResDtoList)
-                        .status_code(HttpStatus.OK.value())
-                        .status_message("비공유 식품 목록 조회 완료")
-                        .build(),
-                HttpStatus.OK);
-    }
+    @GetMapping("/mylist")
+    public ResponseEntity<?> myFoodList(@PathVariable("fridgeId") Long fridgeId,
+                                           Pageable pageable,
+                                           @ModelAttribute FoodSearchDto foodSearchDto,
+                                           @RequestParam(required = false) Boolean isShared) {
+        Page<FoodResDto> foodResDtoList = foodService.getFoodsByRole(fridgeId, pageable, foodSearchDto, isShared);
 
-    @GetMapping("/my/shared")
-    public ResponseEntity<?> SharedMyFoods(Pageable pageable, @ModelAttribute FoodSearchDto foodSearchDto) {
-        Page<FoodResDto> foodResDtoList = foodService.findMyFoods(pageable, foodSearchDto, true);
         return new ResponseEntity<>(
                 CommonDto.builder()
                         .result(foodResDtoList)
                         .status_code(HttpStatus.OK.value())
-                        .status_message("내 공유 식품 목록 조회 완료")
-                        .build(),
-                HttpStatus.OK);
-    }
-
-    @GetMapping("/my/nonshared")
-    public ResponseEntity<?> NonSharedMyFoods(Pageable pageable, @ModelAttribute FoodSearchDto foodSearchDto) {
-        Page<FoodResDto> foodResDtoList = foodService.findMyFoods(pageable, foodSearchDto, false);
-        return new ResponseEntity<>(
-                CommonDto.builder()
-                        .result(foodResDtoList)
-                        .status_code(HttpStatus.OK.value())
-                        .status_message("내 비공유 식품 목록 조회 완료")
+                        .status_message("내 식품 목록 조회 완료")
                         .build(),
                 HttpStatus.OK);
     }
 
     @PutMapping("/update/{foodId}")
-    public ResponseEntity<?> updateFood(@PathVariable Long foodId, @RequestBody @Valid FoodUpdateDto foodUpdateDto) {
-        Food food = foodService.updateFood(foodUpdateDto, foodId);
-        return new  ResponseEntity<>(
+    public ResponseEntity<?> updateFood(@PathVariable("fridgeId") Long fridgeId,
+                                        @PathVariable("foodId") Long foodId,
+                                        @RequestBody @Valid FoodUpdateDto foodUpdateDto) {
+        FoodResDto foodResponse = foodService.updateFood(fridgeId, foodId, foodUpdateDto);
+        return new ResponseEntity<>(
                 CommonDto.builder()
-                        .result(food)
+                        .result(foodResponse)
                         .status_code(HttpStatus.OK.value())
-                        .status_message("식품정보수정완료")
-                        .build()
-                , HttpStatus.OK);
+                        .status_message("식품 정보 수정 완료")
+                        .build(),
+                HttpStatus.OK);
     }
 
-    @PostMapping("/{fridgeId}/register")
-    public ResponseEntity<?> registerNewFood(@RequestBody FoodCreateDto foodCreateDto,
-                                             @PathVariable Long fridgeId) {
-        Long id = foodService.registerNewFood(foodCreateDto, fridgeId);
-        return new  ResponseEntity<>(
+    @DeleteMapping("/delete/{foodId}")
+    public ResponseEntity<?> deleteFood(@PathVariable("fridgeId") Long fridgeId,
+                                        @PathVariable("foodId") Long foodId) {
+        foodService.deleteFood(fridgeId, foodId);
+        return new ResponseEntity<>(
                 CommonDto.builder()
-                        .result(id)
+                        .result("SUCCESS")
                         .status_code(HttpStatus.OK.value())
-                        .status_message("식품 등록 완료")
-                        .build()
-                , HttpStatus.OK);
+                        .status_message("식품이 성공적으로 삭제되었습니다.")
+                        .build(),
+                HttpStatus.OK);
     }
-
 }

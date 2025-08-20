@@ -21,7 +21,9 @@ public class Food {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
+    @Column(nullable = false)
     private Integer quantity;
 
     @Enumerated(EnumType.STRING)
@@ -29,12 +31,17 @@ public class Food {
     @Enumerated(EnumType.STRING)
     private StorageType storageType;
 
+    @Column(nullable = false)
     private LocalDate storageStartDate;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @Column(nullable = false)
     private LocalDateTime expirationDateTime;
 
     private String memo;
+    @Column(nullable = false)
     private Boolean isShared;
+    @Column(nullable = false)
+    private Boolean isTemp;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
@@ -49,6 +56,7 @@ public class Food {
         this.expirationDateTime = expirationDateTime;
         this.memo =  foodUpdateDto.getMemo();
         this.isShared = foodUpdateDto.getShareable();
+        this.isTemp = foodUpdateDto.getIsTemp();
         return this;
     }
 

@@ -135,5 +135,22 @@ public class Notification extends BaseTimeEntity {
                 .build();
     }
 
+    // 식자재 유통기한 알림
+    public static Notification fromExpiration(Member receiver, Food food, String daysLeftMessage) {
+
+        String content = "'" + food.getFridge().getFridgeName() + "'의 '" + food.getName() +
+                "' 유통기한이 " + daysLeftMessage;
+
+        return Notification.builder()
+                .sender(null)           //  sender가 시스템
+                .receiver(receiver)
+                .fridge(food.getFridge())
+                .content(content)
+                .notificationType(NotificationType.EXPIRATION_IMMINENT)
+                .food(food)
+                .isRead(false)
+                .build();
+    }
+
 
 }

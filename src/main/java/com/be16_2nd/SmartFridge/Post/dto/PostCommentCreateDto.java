@@ -15,10 +15,11 @@ import lombok.NoArgsConstructor;
 public class PostCommentCreateDto {
     private String content;
 
-    public PostComment toEntity(Post post, Member member) {
+    public PostComment fromEntity(Post post , Member member) {
         return PostComment.builder()
                 .post(post)
+                .member(member)
                 .content(this.content)
-                .member(member).build();
+                .build();
     }
 }

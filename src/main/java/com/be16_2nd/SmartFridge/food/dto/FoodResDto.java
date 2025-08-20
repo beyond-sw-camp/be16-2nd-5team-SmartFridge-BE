@@ -23,6 +23,8 @@ public class FoodResDto {
     private LocalDateTime expirationDateTime;
     private Category category;
     private StorageType storageType;
+    private Boolean shareable;
+    private Boolean isTemp;
 
     public static FoodResDto fromEntity(Food food) {
         return FoodResDto.builder()
@@ -33,6 +35,8 @@ public class FoodResDto {
                 .expirationDateTime(food.getExpirationDateTime())
                 .category(food.getCategory())
                 .storageType(food.getStorageType())
+                .shareable(food.getIsShared())
+                .isTemp(food.getIsTemp())
                 .build();
     }
 }

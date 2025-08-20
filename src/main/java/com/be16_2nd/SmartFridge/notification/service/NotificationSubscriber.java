@@ -1,6 +1,7 @@
-package com.be16_2nd.SmartFridge.common.service;
+package com.be16_2nd.SmartFridge.notification.service;
 
 import com.be16_2nd.SmartFridge.common.dto.SseMessageDTO;
+import com.be16_2nd.SmartFridge.common.service.SseEmitterRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

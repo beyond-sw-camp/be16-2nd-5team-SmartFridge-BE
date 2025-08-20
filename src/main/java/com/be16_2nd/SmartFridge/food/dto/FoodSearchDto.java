@@ -13,4 +13,6 @@ import lombok.NoArgsConstructor;
 public class FoodSearchDto {
     private String foodName;
     private Category category;
+    private FoodFilterType filterType;
+    private Boolean isTemp;
 }

@@ -1,20 +1,11 @@
 package com.be16_2nd.SmartFridge.food.service;
 
-import com.be16_2nd.SmartFridge.food.domain.Food;
-import com.be16_2nd.SmartFridge.food.dto.FoodCreateDto;
-import com.be16_2nd.SmartFridge.food.dto.FoodResDto;
-import com.be16_2nd.SmartFridge.food.dto.FoodSearchDto;
-import com.be16_2nd.SmartFridge.food.dto.FoodUpdateDto;
-import com.be16_2nd.SmartFridge.food.repository.FoodRepository;
-import com.be16_2nd.SmartFridge.fridge.domain.Fridge;
-import com.be16_2nd.SmartFridge.fridge.domain.FridgeMember;
+import com.be16_2nd.SmartFridge.common.service.FridgeAccessValidator;
 import com.be16_2nd.SmartFridge.fridge.domain.Type;
-import com.be16_2nd.SmartFridge.fridge.repository.FridgeMemberRepository;
-import com.be16_2nd.SmartFridge.fridge.repository.FridgeRepository;
+import com.be16_2nd.SmartFridge.food.domain.Food;
+import com.be16_2nd.SmartFridge.food.dto.*;
+import com.be16_2nd.SmartFridge.food.repository.FoodRepository;
 import com.be16_2nd.SmartFridge.member.domain.Member;
-import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
-import com.be16_2nd.SmartFridge.notification.domain.Notification;
-import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -24,137 +15,115 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class FoodService {
-    public final MemberRepository memberRepository;
+
     private final FoodRepository foodRepository;
-    private final FridgeRepository fridgeRepository;
-    private final NotificationService notificationService;
-    private final FridgeMemberRepository fridgeMemberRepository;
+    private final FridgeAccessValidator fridgeAccessValidator;
 
-    public Food registerFood(FoodCreateDto foodCreateDto) {
-        // 더미 데이터 (수정 필요)
-        Long fridgeId = 1L;
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email  = authentication.getName();
-        Member member = memberRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는사용자 입니다"));
-        Fridge fridge = fridgeRepository.findById(fridgeId).orElseThrow(() -> new EntityNotFoundException("없는 냉장고 입니다."));
-
-        Food food = foodCreateDto.toEntity(member, fridge);
-        return foodRepository.save(food);
+    public FoodResDto registerFood(Long fridgeId, FoodCreateDto foodCreateDto) {
+        FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
+        Food food = foodCreateDto.toEntity(context.member(), context.fridge());
+        Food savedFood = foodRepository.save(food);
+        return FoodResDto.fromEntity(savedFood);
     }
 
-    public Page<FoodResDto> findAll(Pageable pageable, FoodSearchDto foodSearchDto, boolean isShared) {
+    @Transactional(readOnly = true)
+    public Page<FoodResDto> getFoodsByRole(Long fridgeId, Pageable pageable, FoodSearchDto foodSearchDto, Boolean isShared) {
+        FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
 
-        Specification<Food> specification = new Specification<>() {
-            @Override
-            public Predicate toPredicate(Root<Food> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
-                List<Predicate> predicateList = new ArrayList<>();
+        Specification<Food> specification = createFoodSpecification(fridgeId, context.type(), context.member(), isShared, foodSearchDto);
 
-                // 공유 여부 필수 조건
-                predicateList.add(criteriaBuilder.equal(root.get("isShared"), isShared));
-
-                // 카테고리 조건
-                if (foodSearchDto.getCategory() != null) {
-                    predicateList.add(criteriaBuilder.equal(root.get("category"), foodSearchDto.getCategory()));
-                }
-
-                // 식품명 검색 조건
-                if (foodSearchDto.getFoodName() != null && !foodSearchDto.getFoodName().isBlank()) {
-                    predicateList.add(criteriaBuilder.like(root.get("name"), "%" + foodSearchDto.getFoodName() + "%"));
-                }
-
-                // 리스트를 배열로 변환
-                Predicate[] predicateArr = new Predicate[predicateList.size()];
-                for (int i = 0; i < predicateList.size(); i++) {
-                    predicateArr[i] = predicateList.get(i);
-                }
-
-                Predicate predicate = criteriaBuilder.and(predicateArr);
-                return predicate;
-            }
-        };
-
-        Page<Food> foodList = foodRepository.findAll(specification, pageable);
-        return foodList.map(FoodResDto::fromEntity);
+        return foodRepository.findAll(specification, pageable).map(FoodResDto::fromEntity);
     }
 
-    public Page<FoodResDto> findMyFoods(Pageable pageable, FoodSearchDto foodSearchDto, boolean isShared) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다."));
-
-        Specification<Food> specification = new Specification<>() {
-            @Override
-            public Predicate toPredicate(Root<Food> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
-                List<Predicate> predicateList = new ArrayList<>();
-
-                // 사용자 본인의 식품만
-                predicateList.add(criteriaBuilder.equal(root.get("member"), member));
-
-                // 공유 여부 조건
-                predicateList.add(criteriaBuilder.equal(root.get("isShared"), isShared));
-
-                // 카테고리 조건
-                if (foodSearchDto.getCategory() != null) {
-                    predicateList.add(criteriaBuilder.equal(root.get("category"), foodSearchDto.getCategory()));
-                }
-
-                // 식품명 검색 조건
-                if (foodSearchDto.getFoodName() != null && !foodSearchDto.getFoodName().isBlank()) {
-                    predicateList.add(criteriaBuilder.like(root.get("name"), "%" + foodSearchDto.getFoodName() + "%"));
-                }
-
-                // 리스트를 배열로 변환하여 and로 묶기
-                Predicate[] predicateArr = new Predicate[predicateList.size()];
-                for (int i = 0; i < predicateList.size(); i++) {
-                    predicateArr[i] = predicateList.get(i);
-                }
-
-                Predicate predicate = criteriaBuilder.and(predicateArr);
-                return predicate;
-            }
-        };
-
-        Page<Food> foodList = foodRepository.findAll(specification, pageable);
-        return foodList.map(FoodResDto::fromEntity);
-    }
-
-    public Food updateFood(FoodUpdateDto foodUpdateDto, Long id) {
-        Food food =  foodRepository.findById(id).orElseThrow(()->new NoSuchElementException("없는 식품입니다"));
-        return food.updateFood(foodUpdateDto);
-    }
-
-    public Long registerNewFood(FoodCreateDto foodCreateDto, Long fridgeId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email  = authentication.getName();
-        Member member = memberRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는사용자 입니다"));
-        Fridge fridge = fridgeRepository.findById(fridgeId).orElseThrow(() -> new EntityNotFoundException("없는 냉장고 입니다."));
-
-        Food food = foodCreateDto.toEntity(member, fridge);
-        Food newFood = foodRepository.save(food);
-
-        FridgeMember fridgeMember = fridgeMemberRepository.findByFridgeAndType(fridge, Type.MANAGER)
-                .orElseThrow(() -> new EntityNotFoundException("냉장고 관리자가 존재하지 않습니다."));
-
-        if (fridgeMember != null) {
-            Member receiver = fridgeMember.getMember();
-            Notification notification = Notification.fromFood(member, receiver, newFood);
-            notificationService.create(notification);
+    public FoodResDto updateFood(Long fridgeId, Long foodId, FoodUpdateDto foodUpdateDto) {
+        fridgeAccessValidator.validate(fridgeId);
+        Food food = foodRepository.findById(foodId)
+                .orElseThrow(() -> new EntityNotFoundException("없는 식품입니다. ID: " + foodId));
+        if (!food.getFridge().getId().equals(fridgeId)) {
+            throw new IllegalArgumentException("해당 냉장고에 존재하지 않는 식품입니다.");
         }
-        return newFood.getId();
+        Food updatedFood = food.updateFood(foodUpdateDto);
+        return FoodResDto.fromEntity(updatedFood);
     }
 
+    public void deleteFood(Long fridgeId, Long foodId) {
+        fridgeAccessValidator.validate(fridgeId);
+        Food food = foodRepository.findById(foodId)
+                .orElseThrow(() -> new EntityNotFoundException("삭제할 식품을 찾을 수 없습니다. ID: " + foodId));
+        if (!food.getFridge().getId().equals(fridgeId)) {
+            throw new IllegalArgumentException("해당 냉장고에 존재하지 않는 식품입니다.");
+        }
+        foodRepository.delete(food);
+    }
+
+    private Specification<Food> createFoodSpecification(Long fridgeId, Type userType, Member member, Boolean isShared, FoodSearchDto searchDto) {
+        return (root, query, cb) -> {
+            List<Predicate> predicateList = new ArrayList<>();
+            predicateList.add(cb.equal(root.get("fridge").get("id"), fridgeId));
+
+            if (userType == Type.COMMON) {
+                Predicate isSharedPredicate = cb.equal(root.get("isShared"), true);
+                Predicate isMyFoodPredicate = cb.equal(root.get("member"), member);
+                predicateList.add(cb.or(isSharedPredicate, isMyFoodPredicate));
+            }
+
+            if (isShared != null) {
+                predicateList.add(cb.equal(root.get("isShared"), isShared));
+            }
+            if (searchDto.getCategory() != null) {
+                predicateList.add(cb.equal(root.get("category"), searchDto.getCategory()));
+            }
+            if (StringUtils.hasText(searchDto.getFoodName())) {
+                predicateList.add(cb.like(root.get("name"), "%" + searchDto.getFoodName() + "%"));
+            }
+
+            // 유통기한 및 임시보관 필터
+            addFilterPredicate(predicateList, searchDto.getFilterType(), cb, root);
+
+            return cb.and(predicateList.toArray(new Predicate[0]));
+        };
+    }
+
+    private void addFilterPredicate(List<Predicate> predicates, FoodFilterType filterType, CriteriaBuilder cb, Root<Food> root) {
+        if (filterType == null || filterType == FoodFilterType.ALL) {
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = LocalDate.now();
+
+        switch (filterType) {
+            case TEMP_ONLY:
+                predicates.add(cb.equal(root.get("isTemp"), true));
+                break;
+            case EXPIRED:
+                predicates.add(cb.equal(root.get("isTemp"), false));
+                predicates.add(cb.lessThan(root.get("expirationDateTime"), now));
+                break;
+            case EXPIRES_TODAY:
+                predicates.add(cb.equal(root.get("isTemp"), false));
+                LocalDateTime startOfToday = today.atStartOfDay();
+                LocalDateTime endOfToday = today.plusDays(1).atStartOfDay();
+                predicates.add(cb.between(root.get("expirationDateTime"), startOfToday, endOfToday));
+                break;
+            case EXPIRES_IN_THREE_DAYS:
+                predicates.add(cb.equal(root.get("isTemp"), false));
+                LocalDateTime threeDaysLater = today.plusDays(3).atStartOfDay();
+                predicates.add(cb.between(root.get("expirationDateTime"), now, threeDaysLater));
+                break;
+        }
+    }
 }

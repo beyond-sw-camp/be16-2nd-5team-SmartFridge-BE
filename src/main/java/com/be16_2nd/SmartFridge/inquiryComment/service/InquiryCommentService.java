@@ -1,6 +1,6 @@
 package com.be16_2nd.SmartFridge.inquiryComment.service;
 
-import com.be16_2nd.SmartFridge.common.service.NotificationPublisher;
+import com.be16_2nd.SmartFridge.notification.service.NotificationPublisher;
 import com.be16_2nd.SmartFridge.inquiry.domain.Inquiry;
 import com.be16_2nd.SmartFridge.inquiry.repository.InquiryRepository;
 import com.be16_2nd.SmartFridge.inquiryComment.domain.InquiryComment;

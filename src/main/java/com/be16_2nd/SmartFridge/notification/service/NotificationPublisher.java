@@ -1,4 +1,4 @@
-package com.be16_2nd.SmartFridge.common.service;
+package com.be16_2nd.SmartFridge.notification.service;
 
 import com.be16_2nd.SmartFridge.common.dto.SseMessageDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 @Slf4j
 @Component

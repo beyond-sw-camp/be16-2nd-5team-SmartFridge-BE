@@ -43,9 +43,9 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-//	Oauth기능 구현을 위한 Oauth의존성
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-
+	//채팅 관련
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'org.springframework.boot:spring-boot-starter-amqp'
 }
 
 tasks.named('test') {

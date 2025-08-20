@@ -29,22 +29,22 @@ public class FoodCreateDto {
 
     private String memo;
     private Boolean shareable;
+    private Boolean isTemp;
 
     public Food toEntity(Member member, Fridge fridge) {
-        if (expirationDate == null) {
-            throw new IllegalArgumentException("유통기한 날짜는 필수입니다.");
-        }
+        LocalDateTime expirationDateTime;
 
-        int hour = 23;
-        int minute = 59;
-        if (expirationHour != null) {
-            hour = expirationHour;
+        if (this.isTemp != null && this.isTemp) {
+
+            expirationDateTime = LocalDateTime.now().plusHours(24);
+        } else {
+            if (expirationDate == null) {
+                throw new IllegalArgumentException("최종 등록 시에는 유통기한 날짜는 필수입니다.");
+            }
+            int hour = (expirationHour != null) ? expirationHour : 23;
+            int minute = (expirationMinute != null) ? expirationMinute : 59;
+            expirationDateTime = expirationDate.atTime(hour, minute);
         }
-        if (expirationMinute != null) {
-            minute = expirationMinute;
-        }
-        
-        LocalDateTime expirationDateTime = expirationDate.atTime(hour, minute);
         return Food.builder()
                 .name(name)
                 .quantity(quantity)
@@ -54,6 +54,7 @@ public class FoodCreateDto {
                 .expirationDateTime(expirationDateTime)
                 .memo(memo)
                 .isShared(shareable)
+                .isTemp(this.isTemp)
                 .member(member)
                 .fridge(fridge)
                 .build();

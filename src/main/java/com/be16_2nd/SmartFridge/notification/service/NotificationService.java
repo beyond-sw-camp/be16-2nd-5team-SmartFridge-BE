@@ -1,8 +1,5 @@
 package com.be16_2nd.SmartFridge.notification.service;
 
-import com.be16_2nd.SmartFridge.common.service.NotificationPublisher;
-import com.be16_2nd.SmartFridge.fridge.domain.Fridge;
-import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.notification.domain.Notification;
 import com.be16_2nd.SmartFridge.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +15,24 @@ public class NotificationService {
     private final NotificationPublisher notificationPublisher;
 
     public void create(Notification notification) {
+        
+        // 유통기한 알림인 경우 발신자가 시스템이기 때문에 sender가 null -> 분기 처리 필요
+        String senderEmail;
+        if (notification.getSender() == null) {
+            senderEmail = null;
+        } else {
+            senderEmail = notification.getSender().getEmail();
+        }
+        
+        // 알림 발송
         notificationPublisher.publish(
-                notification.getSender().getEmail()
+                senderEmail
                 , notification.getReceiver().getEmail()
                 , notification.getContent()
-                ,notification.getNotificationType().name()
+                , notification.getNotificationType().name()
         );
 
+        // 알림 db에 저장
         notificationRepository.save(notification);
     }
 
