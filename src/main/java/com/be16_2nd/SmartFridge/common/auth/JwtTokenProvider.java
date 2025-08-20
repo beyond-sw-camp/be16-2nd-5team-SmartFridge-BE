@@ -50,6 +50,20 @@ public class JwtTokenProvider {
                 , SignatureAlgorithm.HS512.getJcaName());
 
     }
+
+    public String createSocialToken(String email, String role){
+        Claims claims = Jwts.claims().setSubject(email);
+        claims.put("role", role);
+        Date now = new Date();
+        String token = Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime()+expiration*60*1000))
+                .signWith(secret_at_key)
+                .compact();
+        return token;
+    }
+
     public String createAtToken(Member member){
         String email = member.getEmail();
         String role = member.getRole().toString();

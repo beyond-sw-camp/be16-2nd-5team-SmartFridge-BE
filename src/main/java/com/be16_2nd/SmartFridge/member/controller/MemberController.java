@@ -4,11 +4,12 @@ import com.be16_2nd.SmartFridge.common.auth.JwtTokenProvider;
 import com.be16_2nd.SmartFridge.common.dto.CommonDto;
 import com.be16_2nd.SmartFridge.common.dto.CommonErrorDto;
 import com.be16_2nd.SmartFridge.member.domain.Member;
-import com.be16_2nd.SmartFridge.member.dto.LoginReqDto;
-import com.be16_2nd.SmartFridge.member.dto.LoginResDto;
-import com.be16_2nd.SmartFridge.member.dto.MemberCreateDto;
-import com.be16_2nd.SmartFridge.member.dto.MemberResDto;
+import com.be16_2nd.SmartFridge.member.domain.SocialType;
+import com.be16_2nd.SmartFridge.member.dto.*;
+import com.be16_2nd.SmartFridge.member.service.GoogleService;
+import com.be16_2nd.SmartFridge.member.service.KakaoService;
 import com.be16_2nd.SmartFridge.member.service.MemberService;
+import com.be16_2nd.SmartFridge.member.service.NaverService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,7 +17,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -25,6 +28,9 @@ import java.util.UUID;
 public class MemberController {
     private final MemberService memberService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final GoogleService googleService;
+    private final KakaoService kakaoService;
+    private final NaverService naverService;
 
     @PostMapping("/create")
     public ResponseEntity<?> save(@RequestBody @Valid MemberCreateDto memberCreateDto){
@@ -53,6 +59,91 @@ public class MemberController {
                         .result(loginResDto)
                         .status_code(HttpStatus.OK.value())
                         .status_message("로그인 성공")
+                        .build(), HttpStatus.OK);
+    }
+
+//    google로그인 메서드
+    @PostMapping("/google/doLogin")
+    public ResponseEntity<?> googleLogin(@RequestBody RedirectDto redirectDto){
+//        accessToken 발급
+        AccessTokenDto accessTokenDto = googleService.getAccessToken(redirectDto.getCode());
+//        사용자 정보 얻기
+        GoogleProfileDto googleProfileDto = googleService.getGoogleProfile(accessTokenDto.getAccess_token());
+//        회원가입 되어있지 않다면 회원 가입
+        Member originalMember = memberService.getMemberBySocialId(googleProfileDto.getSub());
+        if (originalMember == null){
+            originalMember = memberService.createOauth(googleProfileDto.getSub(),
+                    googleProfileDto.getEmail(),
+                    googleProfileDto.getName(),
+                    googleProfileDto.getPicture(),
+                    SocialType.GOOGLE);
+        }
+//        회원 가입이 되어있는 회원이라면 토큰 발급
+        String jwtToken = jwtTokenProvider.createSocialToken(originalMember.getEmail(),
+                originalMember.getRole().toString());
+
+        Map<String, Object> loginInfo = new HashMap<>();
+        loginInfo.put("id", originalMember.getId());
+        loginInfo.put("token", jwtToken);
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(loginInfo)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("구글 로그인 성공")
+                        .build(), HttpStatus.OK);
+    }
+
+    //    kakao로그인 메서드
+    @PostMapping("/kakao/doLogin")
+    public ResponseEntity<?> kakaoLogin(@RequestBody RedirectDto redirectDto){
+        AccessTokenDto accessTokenDto = kakaoService.getAccessToken(redirectDto.getCode());
+        KakaoProfileDto kakaoProfileDto = kakaoService.getKakaoProfile(accessTokenDto.getAccess_token());
+        Member originalMember = memberService.getMemberBySocialId(kakaoProfileDto.getId());
+        if (originalMember == null){
+            originalMember = memberService.createOauth(kakaoProfileDto.getId(),
+                    kakaoProfileDto.getKakao_account().getEmail(),
+                    kakaoProfileDto.getKakao_account().getProfile().getNickname(),
+                    kakaoProfileDto.getKakao_account().getProfile().getProfile_image_url(),
+                    SocialType.KAKAO);
+        }
+        String jwtToken = jwtTokenProvider.createSocialToken(originalMember.getEmail(),
+                originalMember.getRole().toString());
+
+        Map<String, Object> loginInfo = new HashMap<>();
+        loginInfo.put("id", originalMember.getId());
+        loginInfo.put("token", jwtToken);
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(loginInfo)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("카카오 로그인 성공")
+                        .build(), HttpStatus.OK);
+    }
+
+    //    naver로그인 메서드
+    @PostMapping("/naver/doLogin")
+    public ResponseEntity<?> naverLogin(@RequestBody NaverRedirectDto naverRedirectDto){
+        AccessTokenDto accessTokenDto = naverService.getAccessToken(naverRedirectDto.getCode(), naverRedirectDto.getState());
+        NaverProfileDto naverProfileDto = naverService.getNaverProfile(accessTokenDto.getAccess_token());
+        Member originalMember = memberService.getMemberBySocialId(naverProfileDto.getResponse().getId());
+        if (originalMember == null){
+            originalMember = memberService.createOauth(naverProfileDto.getResponse().getId(),
+                    naverProfileDto.getResponse().getEmail(),
+                    naverProfileDto.getResponse().getNickname(),
+                    naverProfileDto.getResponse().getProfile_image(),
+                    SocialType.NAVER);
+        }
+        String jwtToken = jwtTokenProvider.createSocialToken(originalMember.getEmail(),
+                originalMember.getRole().toString());
+
+        Map<String, Object> loginInfo = new HashMap<>();
+        loginInfo.put("id", originalMember.getId());
+        loginInfo.put("token", jwtToken);
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(loginInfo)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("네이버 로그인 성공")
                         .build(), HttpStatus.OK);
     }
 

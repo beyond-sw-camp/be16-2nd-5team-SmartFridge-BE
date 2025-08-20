@@ -1,6 +1,7 @@
 package com.be16_2nd.SmartFridge.member.service;
 
 import com.be16_2nd.SmartFridge.member.domain.Member;
+import com.be16_2nd.SmartFridge.member.domain.SocialType;
 import com.be16_2nd.SmartFridge.member.dto.LoginReqDto;
 import com.be16_2nd.SmartFridge.member.dto.MemberCreateDto;
 import com.be16_2nd.SmartFridge.member.dto.MemberResDto;
@@ -46,6 +47,23 @@ public class MemberService {
             throw new IllegalArgumentException("id, email또는 비밀번호가 일치하지 않습니다.");
         }
         return optionalMember.get();
+    }
+
+    public Member getMemberBySocialId(String socialId){
+        Member member = memberRepository.findBySocialId(socialId).orElse(null);
+        return member;
+    }
+
+    public Member createOauth(String socialId, String email, String name, String picture, SocialType socialType){
+        Member member = Member.builder()
+                .email(email)
+                .name(name)
+                .profileImage(picture)
+                .socialType(socialType)
+                .socialId(socialId)
+                .build();
+        memberRepository.save(member);
+        return member;
     }
 
     @Transactional(readOnly = true)

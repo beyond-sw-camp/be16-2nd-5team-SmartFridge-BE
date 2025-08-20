@@ -40,10 +40,9 @@ public class SecurityConfig {
                         e.authenticationEntryPoint(jwtAuthenticationHandler) // 401의 경우
                                 .accessDeniedHandler(jwtAuthorizationHandler) // 403의 경우
                 )
-                .authorizeHttpRequests(a->a.requestMatchers(
-                        "/member/create",
-                        "member/doLogin",
-                        "connect/chat/**").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(a->a.requestMatchers("/member/create", "/member/doLogin", "/member/google/doLogin", "/member/kakao/doLogin", "/member/naver/doLogin", "connect/chat/**").permitAll().anyRequest().authenticated())
+//                oauth로그인이 성공했을 경우 실행할 클래스 정의
+//                .oauth2Login(o->o.successHandler(googleOauth2LoginSuccess))
                 .build();
     }
     private CorsConfigurationSource corsConfiguration(){
