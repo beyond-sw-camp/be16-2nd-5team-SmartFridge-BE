@@ -21,6 +21,9 @@ public class MemberCreateDto {
     @NotEmpty(message = "비밀번호는 필수 입력 항목입니다.")
     @Size(min = 8, max = 16)
     private String password;
+    @NotEmpty(message = "비밀번호확인란은 필수 입력 항목입니다.")
+    @Size(min = 8, max = 16)
+    private String passwordConfirm;
 
     public Member toEntity(String encodedPassword){
         return Member.builder()
