@@ -17,7 +17,6 @@ import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -141,16 +140,13 @@ public class ChatService {
         // 관리자 채팅 방
         ManagerChatRoom managerChatRoom = managerChatRoomRepository.findByFridgeAndMember(fridge, member).orElseThrow(()->new EntityNotFoundException("manager chat room not found"));
         if(managerChatRoom != null){
-            // 관리자가 아닐 시만 채팅방 목록에 추가
-            if(!fridgeMemberRepository.findByFridgeAndMember(fridge, member).orElseThrow(()->new EntityNotFoundException("냉장고 참여자가 아닙니다")).getType().equals(Type.MANAGER)){
-                Long count = isReadRepository.countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(member, managerChatRoom.getId(), ChatRoomType.MANAGER);
-                MyChatListResDto myChatListResDto = MyChatListResDto.builder()
-                        .roomId(managerChatRoom.getId())
-                        .roomName("관리자와의 채팅")
-                        .unReadCount(count)
-                        .build();
-                chatListResDtos.add(myChatListResDto);
-            }
+            Long count = isReadRepository.countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(member, managerChatRoom.getId(), ChatRoomType.MANAGER);
+            MyChatListResDto myChatListResDto = MyChatListResDto.builder()
+                    .roomId(managerChatRoom.getId())
+                    .roomName("관리자와의 채팅")
+                    .unReadCount(count)
+                    .build();
+            chatListResDtos.add(myChatListResDto);
         }
 
         // 공동 구매 채팅방
@@ -176,11 +172,6 @@ public class ChatService {
         if (chatRoomType.equals(ChatRoomType.MANAGER)){
             // 채팅방 찾기
             ManagerChatRoom managerChatRoom = managerChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
-
-            // 현재 냉장고 관리자일 시 접근 불가능
-            if(fridgeMemberRepository.findByFridgeAndMember(managerChatRoom.getFridge(), member).orElseThrow(()-> new EntityNotFoundException("존재하지 않은 회원입니다")).getType().equals(Type.MANAGER)){
-                throw new IllegalArgumentException("잘못된 접근입니다");
-            }
 
             // 채팅방에 속한 회원인지 검증
             chatRoomParticipantValidator.validateManagerRoomParticipant(member.getEmail(), roomId);
