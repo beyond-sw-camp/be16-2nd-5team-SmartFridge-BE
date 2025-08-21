@@ -29,6 +29,12 @@ public class MemberService {
         if (memberRepository.findByEmail(memberCreateDto.getEmail()).isPresent()){
             throw new IllegalArgumentException("이미 존재하는 이메일 입니다.");
         }
+        String newPassword = memberCreateDto.getPassword();
+        String newPasswordConfirm = memberCreateDto.getPasswordConfirm();
+
+        if (!newPassword.equals(newPasswordConfirm)){
+            throw new IllegalArgumentException("비밀번호를 확인해 주세요");
+        }
         Member member = memberRepository.save(memberCreateDto.toEntity(passwordEncoder.encode(memberCreateDto.getPassword())));
         return member.getId();
     }
