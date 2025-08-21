@@ -1,7 +1,6 @@
 package com.be16_2nd.SmartFridge.chat.config;
 
 import com.be16_2nd.SmartFridge.chat.service.ManagerChatRoomLifecycle;
-import com.be16_2nd.SmartFridge.chat.service.ChatService;
 import com.be16_2nd.SmartFridge.chat.service.Validator.ChatRoomParticipantValidator;
 import com.be16_2nd.SmartFridge.chat.service.Validator.TokenValidator;
 import io.jsonwebtoken.Claims;
@@ -26,7 +25,6 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class StompHandler implements ChannelInterceptor {
 
-    private final ChatService chatService;
     private final TokenValidator tokenValidator;
     private final ChatRoomParticipantValidator chatRoomParticipantValidator;
 
