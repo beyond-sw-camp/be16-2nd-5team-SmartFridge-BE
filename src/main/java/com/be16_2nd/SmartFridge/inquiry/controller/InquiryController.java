@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,23 +20,58 @@ public class InquiryController {
 
     private final InquiryService inquiryService;
 
-    @PostMapping("/create/{fridgeId}")
-    public ResponseEntity<?> create(@RequestBody InquiryCreateDto inquiryCreateDto
-            , @PathVariable Long fridgeId){
+//    문의글 작성하기
+    @PostMapping("/create")
+    public ResponseEntity<?> create(@ModelAttribute InquiryCreateDto inquiryCreateDto){
         return new ResponseEntity<>(CommonDto.builder()
-                .result(inquiryService.create(inquiryCreateDto, fridgeId))
+                .result(inquiryService.create(inquiryCreateDto))
                 .status_code(HttpStatus.CREATED.value())
                 .status_message("문의 등록 완료").build(), HttpStatus.CREATED);
     }
 
-    @Transactional(readOnly = true)
+//    admin의 전체 문의 내역 조회
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/list")
     public ResponseEntity<?> findAll(){
-        return null;
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(inquiryService.findAll())
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("문의내역 전체조회 완료")
+                        .build(),HttpStatus.OK);
     }
 
-    @Transactional(readOnly = true)
+//    내 문의 내역 조회
+    @GetMapping("/myInquiry")
     public ResponseEntity<?> myInquiry(){
-        return null;
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(inquiryService.findMyInquiry())
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("내 문의내역 조회 성공")
+                        .build(),HttpStatus.OK);
     }
+
+//    문의 수정하기
+    @PutMapping("/update")
+    public ResponseEntity<?> updateInquiry(){
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(inquiryService.updateInquiry())
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("문의 내역 수정 완료")
+                        .build(),HttpStatus.OK);
+    }
+//    문의 삭제
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteInquiry(){
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(inquiryService.deleteInquiry())
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("문의 삭제 완료")
+                        .build(),HttpStatus.OK);
+    }
+
+
 }

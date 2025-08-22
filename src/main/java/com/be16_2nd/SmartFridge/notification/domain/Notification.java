@@ -65,7 +65,6 @@ public class Notification extends BaseTimeEntity {
         return Notification.builder()
                 .sender(sender)
                 .receiver(receiver)
-                .fridge(inquiry.getFridge())
                 .content(content)
                 .notificationType(NotificationType.NEW_INQUIRY)
                 .inquiry(inquiry)
