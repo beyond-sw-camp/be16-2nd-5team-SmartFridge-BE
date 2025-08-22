@@ -8,7 +8,7 @@ import java.util.Optional;
 
 @Repository
 public interface FridgeRepository extends JpaRepository<Fridge, Long> {
-    Optional<Fridge> findByFridgeName(String firdgeName);
+    Optional<Fridge> findByFridgeName(String fridgeName);
 
     Optional<Fridge> findByInviteCode(String inviteCode);
 }

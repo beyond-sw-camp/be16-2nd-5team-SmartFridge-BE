@@ -4,14 +4,13 @@ import com.be16_2nd.SmartFridge.Post.repository.PostRepository;
 import com.be16_2nd.SmartFridge.chat.repository.ManagerChatRoomRepository;
 import com.be16_2nd.SmartFridge.chat.service.ManagerChatRoomLifecycle;
 import com.be16_2nd.SmartFridge.common.service.FridgeAccessValidator;
+import com.be16_2nd.SmartFridge.food.domain.Food;
+import com.be16_2nd.SmartFridge.food.dto.FoodResDto;
 import com.be16_2nd.SmartFridge.food.repository.FoodRepository;
 import com.be16_2nd.SmartFridge.fridge.domain.Fridge;
 import com.be16_2nd.SmartFridge.fridge.domain.FridgeMember;
 import com.be16_2nd.SmartFridge.fridge.domain.Type;
-import com.be16_2nd.SmartFridge.fridge.dto.FridgeCreateDto;
-import com.be16_2nd.SmartFridge.fridge.dto.FridgeCreateResDto;
-import com.be16_2nd.SmartFridge.fridge.dto.FridgeListDto;
-import com.be16_2nd.SmartFridge.fridge.dto.FridgeMemberResDto;
+import com.be16_2nd.SmartFridge.fridge.dto.*;
 import com.be16_2nd.SmartFridge.fridge.repository.FridgeMemberRepository;
 import com.be16_2nd.SmartFridge.fridge.repository.FridgeRepository;
 import com.be16_2nd.SmartFridge.member.domain.Member;
@@ -24,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -53,16 +53,33 @@ public class FridgeService {
                         .type(Type.MANAGER)
                         .build());
         fridge.setInviteCode(UUID.randomUUID().toString());
-        String inviteLink = "https://smart_fridge.com/fridge/join?code=" + fridge.getInviteCode();
+        String inviteLink = fridge.getId() + fridge.getInviteCode();
         fridgeRepository.save(fridge);
         FridgeCreateResDto dto = FridgeCreateResDto.builder()
                 .fridgeId(fridge.getId())
                 .inviteLink(inviteLink)
                 .build();
-
         managerChatRoomLifecycle.createManagerChatRoom(member, fridge);
-
         return dto;
+    }
+
+    @Transactional
+    public Long update(Long fridgeId, FridgeUpdateDto fridgeUpdateDto){
+        FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
+        Fridge fridge = context.fridge();
+        if(!context.type().equals(Type.MANAGER)){
+            throw new AccessDeniedException("MANAGER만 수정 할 수 있습니다");
+        }
+
+        String newName = fridgeUpdateDto.getFridgeName();
+        if (newName != null && !newName.equals(fridge.getFridgeName())) {
+            Optional<Fridge> existing = fridgeRepository.findByFridgeName(newName);
+            if (existing.isPresent() && !existing.get().getId().equals(fridgeId)) {
+                throw new IllegalArgumentException("이미 동일한 이름의 냉장고가 있습니다.");
+            }
+        }
+        fridge.updateFridge(fridgeUpdateDto);
+        return fridge.getId();
     }
 
     public List<FridgeMemberResDto> findByFridgeId(Long fridgeId){
@@ -74,6 +91,11 @@ public class FridgeService {
         return fridge.getFridgeMemberList().stream()
                 .map(fridgeMember -> FridgeMemberResDto.fromEntity(fridgeMember))
                 .collect(Collectors.toList());
+    }
+
+    public FridgeListDto fridgeDetail(Long fridgeId) {
+        FridgeAccessValidator.FridgeContext context =  fridgeAccessValidator.validate(fridgeId);
+        return FridgeListDto.fromEntity(context.fridge(),context.type());
     }
 
     public List<FridgeListDto> findMyFridges() {
