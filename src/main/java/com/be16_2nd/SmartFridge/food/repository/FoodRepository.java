@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -20,5 +21,9 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     void deleteAllByFridgeAndMember(Fridge fridge, Member member);
     @Query("SELECT f FROM Food f WHERE FUNCTION('DATE', f.expirationDateTime) IN :dates")
     List<Food> findAllByExpirationDateIn(@Param("dates") List<LocalDate> dates);
+
+    long countByFridgeIdAndIsTempFalse(Long fridgeId);
+    long countByFridgeIdAndIsTempFalseAndExpirationDateTimeBefore(Long fridgeId, LocalDateTime now);
+    long countByFridgeIdAndIsTempFalseAndExpirationDateTimeBetween(Long fridgeId, LocalDateTime start, LocalDateTime end);
 
 }

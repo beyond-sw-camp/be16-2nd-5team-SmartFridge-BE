@@ -140,13 +140,15 @@ public class ChatService {
         // 관리자 채팅 방
         ManagerChatRoom managerChatRoom = managerChatRoomRepository.findByFridgeAndMember(fridge, member).orElseThrow(()->new EntityNotFoundException("manager chat room not found"));
         if(managerChatRoom != null){
-            Long count = isReadRepository.countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(member, managerChatRoom.getId(), ChatRoomType.MANAGER);
-            MyChatListResDto myChatListResDto = MyChatListResDto.builder()
-                    .roomId(managerChatRoom.getId())
-                    .roomName("관리자와의 채팅")
-                    .unReadCount(count)
-                    .build();
-            chatListResDtos.add(myChatListResDto);
+            if(!fridgeMemberRepository.findByFridgeAndMember(fridge, member).orElseThrow(()->new EntityNotFoundException("fridge member not found")).getType().equals(Type.MANAGER)){
+                Long count = isReadRepository.countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(member, managerChatRoom.getId(), ChatRoomType.MANAGER);
+                MyChatListResDto myChatListResDto = MyChatListResDto.builder()
+                        .roomId(managerChatRoom.getId())
+                        .roomName("관리자와의 채팅")
+                        .unReadCount(count)
+                        .build();
+                chatListResDtos.add(myChatListResDto);
+            }
         }
 
         // 공동 구매 채팅방
@@ -172,6 +174,11 @@ public class ChatService {
         if (chatRoomType.equals(ChatRoomType.MANAGER)){
             // 채팅방 찾기
             ManagerChatRoom managerChatRoom = managerChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
+
+            // 냉장고 관리자가 본인의 채팅방 접근 시 예외 발생
+            if(fridgeMemberRepository.findByFridgeAndMember(managerChatRoom.getFridge(), member).orElseThrow(()->new EntityNotFoundException("fridge member not found")).getType().equals(Type.MANAGER)){
+                throw new IllegalArgumentException("잘못된 접근입니다.");
+            }
 
             // 채팅방에 속한 회원인지 검증
             chatRoomParticipantValidator.validateManagerRoomParticipant(member.getEmail(), roomId);

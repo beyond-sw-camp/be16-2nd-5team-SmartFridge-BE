@@ -3,6 +3,8 @@ package com.be16_2nd.SmartFridge.fridge.domain;
 import com.be16_2nd.SmartFridge.Post.domain.Post;
 import com.be16_2nd.SmartFridge.common.domain.BaseTimeEntity;
 import com.be16_2nd.SmartFridge.food.domain.Food;
+import com.be16_2nd.SmartFridge.food.dto.FoodUpdateDto;
+import com.be16_2nd.SmartFridge.fridge.dto.FridgeUpdateDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -37,6 +39,11 @@ public class Fridge extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "fridge", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
+
+    public void updateFridge(FridgeUpdateDto fridgeUpdateDto) {
+        this.fridgeName = fridgeUpdateDto.getFridgeName();
+        this.description = fridgeUpdateDto.getDescription();
+    }
 
 }
 
