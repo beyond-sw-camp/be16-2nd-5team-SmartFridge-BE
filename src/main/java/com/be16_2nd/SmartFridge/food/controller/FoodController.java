@@ -88,4 +88,16 @@ public class FoodController {
                         .build(),
                 HttpStatus.OK);
     }
+
+    @GetMapping("/stats")
+    public ResponseEntity<?> foodStats(@PathVariable Long fridgeId) {
+        FoodStatResDto stats = foodService.foodStats(fridgeId);
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(stats)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("식품통계")
+                        .build(),
+                HttpStatus.OK);
+    }
 }

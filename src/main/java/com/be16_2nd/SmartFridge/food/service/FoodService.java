@@ -48,6 +48,7 @@ public class FoodService {
         return foodRepository.findAll(specification, pageable).map(FoodResDto::fromEntity);
     }
 
+
     public FoodResDto updateFood(Long fridgeId, Long foodId, FoodUpdateDto foodUpdateDto) {
         fridgeAccessValidator.validate(fridgeId);
         Food food = foodRepository.findById(foodId)
@@ -67,6 +68,27 @@ public class FoodService {
             throw new IllegalArgumentException("해당 냉장고에 존재하지 않는 식품입니다.");
         }
         foodRepository.delete(food);
+    }
+    @Transactional(readOnly = true)
+    public FoodStatResDto foodStats(Long fridgeId) {
+        fridgeAccessValidator.validate(fridgeId);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime threeDaysLater = now.plusDays(3);
+
+        long totalCount = foodRepository.countByFridgeIdAndIsTempFalse(fridgeId);
+
+        long expiredCount = foodRepository.countByFridgeIdAndIsTempFalseAndExpirationDateTimeBefore(fridgeId, now);
+
+        long expiringSoonCount = foodRepository.countByFridgeIdAndIsTempFalseAndExpirationDateTimeBetween(fridgeId, now, threeDaysLater);
+
+        long freshCount = totalCount - expiredCount - expiringSoonCount;
+
+        return FoodStatResDto.builder()
+                .totalCount(totalCount)
+                .freshCount(freshCount)
+                .expiringSoonCount(expiringSoonCount)
+                .expiredCount(expiredCount)
+                .build();
     }
 
     private Specification<Food> createFoodSpecification(Long fridgeId, Type userType, Member member, Boolean isShared, FoodSearchDto searchDto) {
@@ -89,7 +111,6 @@ public class FoodService {
             if (StringUtils.hasText(searchDto.getFoodName())) {
                 predicateList.add(cb.like(root.get("name"), "%" + searchDto.getFoodName() + "%"));
             }
-
             // 유통기한 및 임시보관 필터
             addFilterPredicate(predicateList, searchDto.getFilterType(), cb, root);
 
@@ -101,10 +122,8 @@ public class FoodService {
         if (filterType == null || filterType == FoodFilterType.ALL) {
             return;
         }
-
         LocalDateTime now = LocalDateTime.now();
         LocalDate today = LocalDate.now();
-
         switch (filterType) {
             case TEMP_ONLY:
                 predicates.add(cb.equal(root.get("isTemp"), true));
