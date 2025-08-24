@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -72,9 +73,11 @@ public class InquiryService {
         return null;
     }
 
-    public Long deleteInquiry(){
+    public Long deleteInquiry(Long inquiryId){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("존재하지 않는 사용자입니다."));
-    return null;
+        Inquiry inquiry = inquiryRepository.findById(inquiryId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 글입니다."));
+        inquiryRepository.delete(inquiry);
+    return inquiryId;
     }
 }

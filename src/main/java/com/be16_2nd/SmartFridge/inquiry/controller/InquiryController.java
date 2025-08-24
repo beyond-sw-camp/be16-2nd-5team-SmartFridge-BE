@@ -63,11 +63,11 @@ public class InquiryController {
                         .build(),HttpStatus.OK);
     }
 //    문의 삭제
-    @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteInquiry(){
+    @DeleteMapping("/delete/{inquiryId}")
+    public ResponseEntity<?> deleteInquiry(@PathVariable Long inquiryId){
         return new ResponseEntity<>(
                 CommonDto.builder()
-                        .result(inquiryService.deleteInquiry())
+                        .result(inquiryService.deleteInquiry(inquiryId))
                         .status_code(HttpStatus.OK.value())
                         .status_message("문의 삭제 완료")
                         .build(),HttpStatus.OK);
