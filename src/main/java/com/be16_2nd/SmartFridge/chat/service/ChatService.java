@@ -162,6 +162,7 @@ public class ChatService {
                     .maxParticipants(chatParticipant.getPurchaseChatRoom().getMaxParticipants())
                     .roomName(chatParticipant.getPurchaseChatRoom().getTitle())
                     .unReadCount(count)
+                    .isCreator(chatParticipant.getPurchaseChatRoom().getCreator().getId().equals(member.getId()))
                     .build();
             chatListResDtos.add(myChatListResDto);
         }

@@ -16,4 +16,5 @@ public class MyChatListResDto {
     private Integer currentParticipants;
     private Integer maxParticipants;
     private Long unReadCount;
+    private Boolean isCreator;
 }
