@@ -137,15 +137,14 @@ public class ChatService {
         // 관리자 채팅 방
         ManagerChatRoom managerChatRoom = managerChatRoomRepository.findByFridgeAndMember(fridge, member).orElseThrow(()->new EntityNotFoundException("manager chat room not found"));
         if(managerChatRoom != null){
-            if(!fridgeMemberRepository.findByFridgeAndMember(fridge, member).orElseThrow(()->new EntityNotFoundException("fridge member not found")).getType().equals(Type.MANAGER)){
-                Long count = isReadRepository.countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(member, managerChatRoom.getId(), ChatRoomType.MANAGER);
-                MyChatListResDto myChatListResDto = MyChatListResDto.builder()
-                        .roomId(managerChatRoom.getId())
-                        .roomName("관리자와의 채팅")
-                        .unReadCount(count)
-                        .build();
-                chatListResDtos.add(myChatListResDto);
-            }
+            Long count = isReadRepository.countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(member, managerChatRoom.getId(), ChatRoomType.MANAGER);
+            MyChatListResDto myChatListResDto = MyChatListResDto.builder()
+                    .roomId(managerChatRoom.getId())
+                    .roomName("관리자와의 채팅")
+                    .unReadCount(count)
+                    .isManager(fridgeMemberRepository.findByFridgeAndMember(fridge, member).orElseThrow(()->new EntityNotFoundException("member not found")).getType().equals(Type.MANAGER))
+                    .build();
+            chatListResDtos.add(myChatListResDto);
         }
 
         // 공동 구매 채팅방
