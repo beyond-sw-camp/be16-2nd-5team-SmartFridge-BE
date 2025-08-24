@@ -25,7 +25,8 @@ public class ChatRoomCreateDto {
                 .fridge(fridge)
                 .contents(this.getContents())
                 .title(this.getTitle())
-                .limitedNum(this.getLimitedNum()-1)
+                .currentParticipants(this.getLimitedNum()-1)
+                .maxParticipants(this.getLimitedNum())
                 .productUrl(this.getProductUrl())
                 .build();
     }
