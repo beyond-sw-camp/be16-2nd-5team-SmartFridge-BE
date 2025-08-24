@@ -150,17 +150,19 @@ public class ChatService {
         // 공동 구매 채팅방
         List<ChatParticipant> chatParticipants = chatParticipantRepository.findAllByMember(member);
         for(ChatParticipant chatParticipant : chatParticipants){
-            Long count = isReadRepository.countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(member, chatParticipant.getPurchaseChatRoom().getId(), ChatRoomType.PURCHASE);
-            MyChatListResDto myChatListResDto = MyChatListResDto.builder()
-                    .roomId(chatParticipant.getPurchaseChatRoom().getId())
-                    .userName(member.getName())
-                    .currentParticipants(chatParticipant.getPurchaseChatRoom().getCurrentParticipants())
-                    .maxParticipants(chatParticipant.getPurchaseChatRoom().getMaxParticipants())
-                    .roomName(chatParticipant.getPurchaseChatRoom().getTitle())
-                    .unReadCount(count)
-                    .isCreator(chatParticipant.getPurchaseChatRoom().getCreator().getId().equals(member.getId()))
-                    .build();
-            chatListResDtos.add(myChatListResDto);
+            if(chatParticipant.getPurchaseChatRoom().getFridge().getId().equals(fridge.getId())){
+                Long count = isReadRepository.countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(member, chatParticipant.getPurchaseChatRoom().getId(), ChatRoomType.PURCHASE);
+                MyChatListResDto myChatListResDto = MyChatListResDto.builder()
+                        .roomId(chatParticipant.getPurchaseChatRoom().getId())
+                        .userName(member.getName())
+                        .currentParticipants(chatParticipant.getPurchaseChatRoom().getCurrentParticipants())
+                        .maxParticipants(chatParticipant.getPurchaseChatRoom().getMaxParticipants())
+                        .roomName(chatParticipant.getPurchaseChatRoom().getTitle())
+                        .unReadCount(count)
+                        .isCreator(chatParticipant.getPurchaseChatRoom().getCreator().getId().equals(member.getId()))
+                        .build();
+                chatListResDtos.add(myChatListResDto);
+            }
         }
         return chatListResDtos;
     }
