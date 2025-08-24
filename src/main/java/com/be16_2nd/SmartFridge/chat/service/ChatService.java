@@ -157,6 +157,9 @@ public class ChatService {
             Long count = isReadRepository.countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(member, chatParticipant.getPurchaseChatRoom().getId(), ChatRoomType.PURCHASE);
             MyChatListResDto myChatListResDto = MyChatListResDto.builder()
                     .roomId(chatParticipant.getPurchaseChatRoom().getId())
+                    .userName(member.getName())
+                    .currentParticipants(chatParticipant.getPurchaseChatRoom().getCurrentParticipants())
+                    .maxParticipants(chatParticipant.getPurchaseChatRoom().getMaxParticipants())
                     .roomName(chatParticipant.getPurchaseChatRoom().getTitle())
                     .unReadCount(count)
                     .build();
