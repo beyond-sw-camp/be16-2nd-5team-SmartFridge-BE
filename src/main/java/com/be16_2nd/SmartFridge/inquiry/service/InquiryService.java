@@ -75,6 +75,6 @@ public class InquiryService {
     public Long deleteInquiry(){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("존재하지 않는 사용자입니다."));
-        inquiryRepository.
+    return null;
     }
 }
