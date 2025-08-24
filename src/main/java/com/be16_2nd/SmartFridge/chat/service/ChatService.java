@@ -263,7 +263,7 @@ public class ChatService {
         // 해당 냉장고 참여자인지 확인
         fridgeAccessValidator.validate(fridge.getId());
 
-        List<PurchaseChatRoom> purchaseChatRooms = purchaseChatRoomRepository.findByFridgeAndJoinStatusAndIsActive(fridge, JoinStatus.OPEN, true);
+        List<PurchaseChatRoom> purchaseChatRooms = purchaseChatRoomRepository.findByFridgeAndJoinStatusAndIsActiveOrderByCreatedTimeDesc(fridge, JoinStatus.OPEN, true);
         List<PurchaseChatRoomListResDto> purchaseChatRoomListResDtos = new ArrayList<>();
         for(PurchaseChatRoom purchaseChatRoom : purchaseChatRooms){
             PurchaseChatRoomListResDto purchaseChatRoomListResDto = PurchaseChatRoomListResDto.builder()
