@@ -1,10 +1,7 @@
 package com.be16_2nd.SmartFridge.chat.service;
 
 import com.be16_2nd.SmartFridge.chat.domain.*;
-import com.be16_2nd.SmartFridge.chat.dto.ChatMessageDto;
-import com.be16_2nd.SmartFridge.chat.dto.ChatRoomCreateDto;
-import com.be16_2nd.SmartFridge.chat.dto.MyChatListResDto;
-import com.be16_2nd.SmartFridge.chat.dto.PurchaseChatRoomListResDto;
+import com.be16_2nd.SmartFridge.chat.dto.*;
 import com.be16_2nd.SmartFridge.chat.repository.*;
 import com.be16_2nd.SmartFridge.chat.service.Validator.ChatRoomParticipantValidator;
 import com.be16_2nd.SmartFridge.common.service.FridgeAccessValidator;
@@ -344,5 +341,11 @@ public class ChatService {
             String pattern = "manager/chat/"+roomId+"/";
             return chatImageService.uploadImages(files, pattern);
         }
+    }
+
+    // 공동 구매 채팅방 정보 가져오기
+    public PurchaseChatRoomResDto getRoomInfo(Long roomId){
+        PurchaseChatRoom purchaseChatRoom = purchaseChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
+        return PurchaseChatRoomResDto.fromPurchaseChatRoom(purchaseChatRoom);
     }
 }

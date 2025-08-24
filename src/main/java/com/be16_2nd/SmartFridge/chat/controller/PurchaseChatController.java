@@ -93,4 +93,13 @@ public class PurchaseChatController {
                 .status_message("공동구매채팅 이미지 업로드 성공")
                 .build(), HttpStatus.CREATED);
     }
+
+    @GetMapping("/info/{roomId}")
+    public ResponseEntity<?> getRoomInfo(@PathVariable Long roomId) {
+        return new ResponseEntity<>(CommonDto.builder()
+                .result(chatService.getRoomInfo(roomId))
+                .status_code(HttpStatus.OK.value())
+                .status_message("공동구매채팅 정보 가져오기 성공")
+                .build(), HttpStatus.OK);
+    }
 }
