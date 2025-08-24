@@ -257,6 +257,7 @@ public class ChatService {
 
     // 공동 구매 채팅방 목록 조회
     public List<PurchaseChatRoomListResDto> getPurchaseChatRooms(Long fridgeID){
+        Member member = memberRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("member not found"));
         Fridge fridge = fridgeRepository.findById(fridgeID).orElseThrow(() -> new EntityNotFoundException("fridge not found"));
 
         // 해당 냉장고 참여자인지 확인
@@ -268,6 +269,9 @@ public class ChatService {
             PurchaseChatRoomListResDto purchaseChatRoomListResDto = PurchaseChatRoomListResDto.builder()
                     .roomId(purchaseChatRoom.getId())
                     .roomName(purchaseChatRoom.getTitle())
+                    .isCreator(purchaseChatRoom.getCreator().getId().equals(member.getId()))
+                    .currentParticipants(purchaseChatRoom.getCurrentParticipants())
+                    .maxParticipants(purchaseChatRoom.getMaxParticipants())
                     .build();
             purchaseChatRoomListResDtos.add(purchaseChatRoomListResDto);
         }
@@ -299,7 +303,7 @@ public class ChatService {
                 .purchaseChatRoom(chatRoom)
                 .member(member)
                 .build();
-        chatRoom.updateCurrentParticipants(chatRoom.getCurrentParticipants()-1);
+        chatRoom.updateCurrentParticipants(chatRoom.getCurrentParticipants()+1);
         chatRoom.getParticipants().add(chatParticipant);
     }
 
@@ -314,7 +318,7 @@ public class ChatService {
         // 참여자인 지 확인 후 제거
         ChatParticipant chatParticipant = chatParticipantRepository.findByPurchaseChatRoomAndMember(chatRoom, member).orElseThrow(()->new EntityNotFoundException("채팅방 참여자가 아닙니다"));
         chatParticipantRepository.delete(chatParticipant);
-        chatRoom.updateCurrentParticipants(chatRoom.getCurrentParticipants()+1);
+        chatRoom.updateCurrentParticipants(chatRoom.getCurrentParticipants()-1);
         
         // 방장이 나갈 시 채팅방 삭제(소프트)
         if(chatRoom.getCreator().equals(member)){
