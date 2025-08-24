@@ -286,7 +286,7 @@ public class ChatService {
         Optional<ChatParticipant> participant = chatParticipantRepository.findByPurchaseChatRoomAndMember(chatRoom, member);
         if(participant.isEmpty()){
             // 참여자가 다 찬 방인 지 확인
-            if(chatRoom.getLimitedNum()<=0){
+            if(chatRoom.getCurrentParticipants().equals(chatRoom.getMaxParticipants())){
                 throw new IllegalArgumentException("정원이 초과되었습니다");
             }
             addParticipantToRoom(chatRoom, member);
@@ -299,7 +299,7 @@ public class ChatService {
                 .purchaseChatRoom(chatRoom)
                 .member(member)
                 .build();
-        chatRoom.updateLimitedNum(chatRoom.getLimitedNum()-1);
+        chatRoom.updateCurrentParticipants(chatRoom.getCurrentParticipants()-1);
         chatRoom.getParticipants().add(chatParticipant);
     }
 
@@ -314,7 +314,7 @@ public class ChatService {
         // 참여자인 지 확인 후 제거
         ChatParticipant chatParticipant = chatParticipantRepository.findByPurchaseChatRoomAndMember(chatRoom, member).orElseThrow(()->new EntityNotFoundException("채팅방 참여자가 아닙니다"));
         chatParticipantRepository.delete(chatParticipant);
-        chatRoom.updateLimitedNum(chatRoom.getLimitedNum()+1);
+        chatRoom.updateCurrentParticipants(chatRoom.getCurrentParticipants()+1);
         
         // 방장이 나갈 시 채팅방 삭제(소프트)
         if(chatRoom.getCreator().equals(member)){
