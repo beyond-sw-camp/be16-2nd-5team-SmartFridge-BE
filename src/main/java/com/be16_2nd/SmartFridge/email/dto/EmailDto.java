@@ -6,7 +6,7 @@ import lombok.Data;
 public class EmailDto {
 
     // 이메일 주소
-    private String mail;
+    private String email;
     // 인증 코드
     private String verifyCode;
 }

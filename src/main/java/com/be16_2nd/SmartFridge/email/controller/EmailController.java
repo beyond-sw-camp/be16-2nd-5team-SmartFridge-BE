@@ -21,7 +21,7 @@ public class EmailController {
     @PostMapping("/send")
     public String mailSend(@RequestBody EmailDto emailDto) throws MessagingException {
         log.info("EmailController.mailSend()");
-        emailService.sendEmail(emailDto.getMail());
+        emailService.sendEmail(emailDto.getEmail());
         return "인증코드가 발송되었습니다.";
     }
 
@@ -29,7 +29,7 @@ public class EmailController {
     @PostMapping("/verify")
     public String verify(EmailDto emailDto) {
         log.info("EmailController.verify()");
-        boolean isVerify = emailService.verifyEmailCode(emailDto.getMail(), emailDto.getVerifyCode());
+        boolean isVerify = emailService.verifyEmailCode(emailDto.getEmail(), emailDto.getVerifyCode());
         return isVerify ? "인증이 완료되었습니다." : "인증 실패하셨습니다.";
     }
 }
