@@ -90,8 +90,8 @@ public class PostController {
 
     @GetMapping("/list")
     public ResponseEntity<?> postList(@PathVariable("fridgeId") Long fridgeId, Pageable pageable,
-                                         @ModelAttribute PostSearchDto searchDto, @RequestParam(required = false, defaultValue = "전체") String categoryName) {
-        Page<PostResDto> postPage = postService.findByPosts(fridgeId, pageable, searchDto, categoryName);
+                                         @ModelAttribute PostSearchDto searchDto, @RequestParam(required = false, defaultValue = "전체") String category) {
+        Page<PostResDto> postPage = postService.findByPosts(fridgeId, pageable, searchDto, category);
         return new ResponseEntity<>(
                 CommonDto.builder()
                         .result(postPage)

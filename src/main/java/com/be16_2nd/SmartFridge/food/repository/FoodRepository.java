@@ -14,6 +14,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public interface FoodRepository extends JpaRepository<Food, Long> {
@@ -22,8 +23,14 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     @Query("SELECT f FROM Food f WHERE FUNCTION('DATE', f.expirationDateTime) IN :dates")
     List<Food> findAllByExpirationDateIn(@Param("dates") List<LocalDate> dates);
 
-    long countByFridgeIdAndIsTempFalse(Long fridgeId);
-    long countByFridgeIdAndIsTempFalseAndExpirationDateTimeBefore(Long fridgeId, LocalDateTime now);
-    long countByFridgeIdAndIsTempFalseAndExpirationDateTimeBetween(Long fridgeId, LocalDateTime start, LocalDateTime end);
+    // --- MANAGER용 메서드 (isTemp 조건 제거) ---
+    long countByFridgeId(Long fridgeId);
+    long countByFridgeIdAndExpirationDateTimeBefore(Long fridgeId, LocalDateTime now);
+    long countByFridgeIdAndExpirationDateTimeBetween(Long fridgeId, LocalDateTime start, LocalDateTime end);
+
+    // --- COMMON 사용자용 메서드 (isTemp 조건 제거) ---
+    long countByFridgeIdAndMemberId(Long fridgeId, UUID userId);
+    long countByFridgeIdAndMemberIdAndExpirationDateTimeBefore(Long fridgeId, UUID userId, LocalDateTime now);
+    long countByFridgeIdAndMemberIdAndExpirationDateTimeBetween(Long fridgeId, UUID userId, LocalDateTime start, LocalDateTime end);
 
 }
