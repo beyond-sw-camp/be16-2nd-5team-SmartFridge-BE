@@ -350,7 +350,7 @@ public class ChatService {
         chatRoom.getParticipants().add(chatParticipant);
 
         // 남은 인원 수 0인 경우 확인
-        if(chatRoom.getLimitedNum() == 0){
+        if(chatRoom.getCurrentParticipants().equals(chatRoom.getMaxParticipants())){
             // 공동 구매 채팅 참여자에게 발송
             List<Member> receivers = chatRoom.getParticipants().stream()
                     .map(ChatParticipant::getMember).toList();
