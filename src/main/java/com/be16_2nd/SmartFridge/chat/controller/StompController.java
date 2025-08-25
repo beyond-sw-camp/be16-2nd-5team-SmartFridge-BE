@@ -45,7 +45,7 @@ public class StompController {
                 NotificationType.ADMIN_CHAT.name()
         );
     }
-    @MessageMapping("purchase/{roomId}")
+    @MessageMapping("PURCHASE/{roomId}")
     public void sendMessageToGroup(@DestinationVariable Long roomId, ChatMessageDto chatMessageReqDto) throws JsonProcessingException {
         chatMessageReqDto.setChatRoomType("PURCHASE");
         chatMessageReqDto.setRoomId(roomId);

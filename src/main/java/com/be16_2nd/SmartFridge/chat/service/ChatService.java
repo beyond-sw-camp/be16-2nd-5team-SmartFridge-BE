@@ -25,7 +25,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /*
 * 채팅 서비스
@@ -115,6 +114,19 @@ public class ChatService {
                     .build();
             chatMessageRepository.save(chatMessage);
 
+            // 이미지 저장
+            if(!chatMessageDto.getImageUrls().isEmpty()){
+                for (String imageUrl : chatMessageDto.getImageUrls()){
+                    chatMessage.getChatMessageImages().add(
+                            ChatMessageImage.builder()
+                                    .chatMessage(chatMessage)
+                                    .imageUrl(imageUrl)
+                                    .build()
+                    );
+                }
+            }
+            chatRoom.updateLastMessageAt(chatMessage.getCreatedTime());
+
             // 사용자별로 읽음여부 저장
             List<ChatParticipant> chatParticipants = chatParticipantRepository.findByPurchaseChatRoom(chatRoom);
             for(ChatParticipant chatParticipant : chatParticipants){
@@ -131,8 +143,8 @@ public class ChatService {
         return chatMessage;
     }
 
-    public ChatMessageEmailDto saveMessageWithEmails(Long roomId, ChatMessageDto chatMessageReqDto) {
-        ChatMessage chatMessage = saveMessage(roomId, chatMessageReqDto);
+    public ChatMessageEmailDto saveMessageWithEmails(Long roomId, ChatMessageDto chatMessageDto) {
+        ChatMessage chatMessage = saveMessage(roomId, chatMessageDto);
 
         String senderEmail = chatMessage.getSender().getEmail();
         List<String> receiverEmails;
@@ -153,7 +165,7 @@ public class ChatService {
 
             receiverEmails = List.of(receiverEmail);
 
-        } else if (chatMessage.getChatRoomType().equals(ChatRoomType.PURCHASE.toString())) {
+        } else if (chatMessage.getChatRoomType().equals(ChatRoomType.PURCHASE)) {
             // 공동구매 채팅
             receiverEmails = chatMessage.getPurchaseChatRoom().getParticipants().stream()
                     .map(ChatParticipant::getMember)
@@ -405,7 +417,7 @@ public class ChatService {
         else{
 //            채팅방참여자 검증
             chatRoomParticipantValidator.validatePurchaseRoomParticipant(member.getEmail(), roomId);
-            String pattern = "manager/chat/"+roomId+"/";
+            String pattern = "purchase/chat/"+roomId+"/";
             return chatImageService.uploadImages(files, pattern);
         }
     }

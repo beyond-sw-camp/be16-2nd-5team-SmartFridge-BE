@@ -32,7 +32,7 @@ public class ChatRedisPubSubService implements MessageListener {
         String payload = new String(message.getBody());
         try {
             ChatMessageDto chatMessageDto = objectMapper.readValue(payload, ChatMessageDto.class);
-            String destination = "/topic/chat/"+chatMessageDto.getChatRoomType().toString()+"/"+chatMessageDto.getRoomId();
+            String destination = "/topic/chat/"+ chatMessageDto.getChatRoomType().toString()+"/"+ chatMessageDto.getRoomId();
             messageTemplate.convertAndSend(destination, chatMessageDto);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

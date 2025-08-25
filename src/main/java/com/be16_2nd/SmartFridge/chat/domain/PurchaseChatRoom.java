@@ -76,4 +76,8 @@ public class PurchaseChatRoom {
     public void updateIsActive(Boolean isActive) {
         this.isActive = isActive;
     }
+
+    public void updateLastMessageAt(LocalDateTime lastMessageAt) {
+        this.lastMessageAt = lastMessageAt;
+    }
 }
