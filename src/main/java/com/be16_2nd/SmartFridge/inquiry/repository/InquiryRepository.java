@@ -10,5 +10,6 @@ import java.util.Optional;
 
 @Repository
 public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
+    List<Inquiry> findByMember(Member member);
     List<Inquiry> findAllByMember(Member member);
 }

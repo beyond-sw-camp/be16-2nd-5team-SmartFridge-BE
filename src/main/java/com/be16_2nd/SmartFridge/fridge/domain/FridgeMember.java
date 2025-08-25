@@ -8,7 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@ToString
 @Builder
 @Getter
 public class FridgeMember extends BaseTimeEntity {

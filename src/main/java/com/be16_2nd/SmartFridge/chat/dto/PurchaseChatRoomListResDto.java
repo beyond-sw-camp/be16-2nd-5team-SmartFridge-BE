@@ -11,5 +11,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PurchaseChatRoomListResDto {
     private Long roomId;
+    private String userName;
     private String roomName;
+    private Integer currentParticipants;
+    private Integer maxParticipants;
+    private Boolean isCreator;
 }

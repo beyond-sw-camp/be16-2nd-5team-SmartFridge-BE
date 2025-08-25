@@ -8,7 +8,8 @@ import com.be16_2nd.SmartFridge.inquiry.dto.InquiryResDto;
 import com.be16_2nd.SmartFridge.inquiry.repository.InquiryRepository;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
-import com.be16_2nd.SmartFridge.notification.domain.Notification;
+import com.be16_2nd.SmartFridge.member.service.MemberService;
+import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
 import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -50,8 +51,9 @@ public class InquiryService {
             inquiry.getInquiryImages().add(inquiryImage);
         }
 
-        Notification notification = Notification.fromInquiry(sender, receiver, inquiry);
-        notificationService.create(notification);
+        // 알림 발송 + db 저장
+        notificationService.create(sender, receiver, NotificationType.NEW_INQUIRY, inquiry);
+
         return inquiry.getInquiryId();
     }
 

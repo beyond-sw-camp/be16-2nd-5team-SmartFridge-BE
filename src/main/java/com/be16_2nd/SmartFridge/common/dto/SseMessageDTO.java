@@ -13,5 +13,6 @@ public class SseMessageDTO {
     private String type;
     private String senderEmail;
     private String receiverEmail;
+    private Long fridgeId;
     private String contents;
 }

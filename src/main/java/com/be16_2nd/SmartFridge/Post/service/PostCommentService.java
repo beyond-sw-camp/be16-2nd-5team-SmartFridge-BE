@@ -9,6 +9,8 @@ import com.be16_2nd.SmartFridge.Post.dto.PostCommentResDto;
 import com.be16_2nd.SmartFridge.Post.repository.PostCommentRepository;
 import com.be16_2nd.SmartFridge.Post.repository.PostRepository;
 import com.be16_2nd.SmartFridge.member.domain.Member;
+import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
+import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +27,7 @@ public class PostCommentService {
     private final PostCommentRepository postCommentRepository;
     private final PostRepository postRepository;
     private final FridgeAccessValidator fridgeAccessValidator;
+    private final NotificationService notificationService;
 
     public Long createPostComment(Long fridgeId, Long postId, PostCommentCreateDto createDto) {
         FridgeContext context = fridgeAccessValidator.validate(fridgeId);
@@ -42,6 +45,10 @@ public class PostCommentService {
         postCommentRepository.save(postComment);
 
         post.increaseCommentCount();
+
+        // 알림 발송 + db 저장
+        notificationService.create(member, post.getMember()
+                , NotificationType.NEW_COMMENT, postComment);
 
         return postComment.getId();
     }

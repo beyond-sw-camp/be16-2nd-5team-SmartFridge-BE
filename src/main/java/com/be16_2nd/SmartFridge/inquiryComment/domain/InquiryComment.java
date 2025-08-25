@@ -17,8 +17,7 @@ public class InquiryComment {
     private String commentContents;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inquiryId")
+    @JoinColumn(name = "inquiry_id")
     private Inquiry inquiry;
-
 
 }

@@ -37,7 +37,9 @@ public class PurchaseChatRoom {
     private String contents;
 
     @Column(nullable = false)
-    private Integer limitedNum;
+    private Integer currentParticipants;
+    @Column(nullable = false)
+    private Integer maxParticipants;
 
     @Column(nullable = false)
     @Builder.Default
@@ -61,9 +63,9 @@ public class PurchaseChatRoom {
     @Builder.Default
     private List<ChatParticipant> participants = new ArrayList<>();
 
-    // 입장 가능 수 변경
-    public void updateLimitedNum(Integer limitedNum) {
-        this.limitedNum = limitedNum;
+    // 현재 참여자 수 변경
+    public void updateCurrentParticipants(Integer currentParticipants) {
+        this.currentParticipants = currentParticipants;
     }
 
     // 구매 모집 상태 변경

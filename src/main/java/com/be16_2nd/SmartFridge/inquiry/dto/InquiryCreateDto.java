@@ -22,6 +22,7 @@ public class InquiryCreateDto {
     private String contents;
     private List<MultipartFile> imageFiles = new ArrayList<>();
 
+
     public Inquiry toEntity(Member member) {
         return Inquiry.builder()
                 .inquiryType(inquiryType)

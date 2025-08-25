@@ -16,7 +16,7 @@ public class ChatRoomCreateDto {
     private Long fridgeId;
     private String title;
     private String contents;
-    private Integer limitedNum;
+    private Integer maxParticipants;
     private String productUrl;
 
     public PurchaseChatRoom toPurchaseChatRoom(Member member, Fridge fridge) {
@@ -25,7 +25,8 @@ public class ChatRoomCreateDto {
                 .fridge(fridge)
                 .contents(this.getContents())
                 .title(this.getTitle())
-                .limitedNum(this.getLimitedNum()-1)
+                .currentParticipants(1)
+                .maxParticipants(this.getMaxParticipants())
                 .productUrl(this.getProductUrl())
                 .build();
     }
