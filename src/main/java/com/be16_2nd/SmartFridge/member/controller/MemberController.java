@@ -34,10 +34,9 @@ public class MemberController {
 
     @PostMapping("/create")
     public ResponseEntity<?> save(@RequestBody @Valid MemberCreateDto memberCreateDto){
-        UUID id = memberService.save(memberCreateDto);
         return new ResponseEntity<>(
                 CommonDto.builder()
-                        .result(id)
+                        .result(memberService.save(memberCreateDto))
                         .status_code(HttpStatus.CREATED.value())
                         .status_message("회원가입을 축하합니다!")
                         .build(),HttpStatus.CREATED);
@@ -62,6 +61,44 @@ public class MemberController {
                         .build(), HttpStatus.OK);
     }
 
+    @GetMapping("/info")
+    public ResponseEntity<?> getMemberInfo(@RequestParam String email) {
+        try {
+            System.out.println("🔍 Searching for member with email: " + email);
+
+            Member member = memberService.findByEmail(email);
+
+            if (member != null) {
+                System.out.println("✅ Member found: " + member.getName());
+                System.out.println("📸 Profile image: " + member.getProfileImage());
+
+                return new ResponseEntity<>(
+                        CommonDto.builder()
+                                .result(member)
+                                .status_code(HttpStatus.OK.value())
+                                .status_message("사용자 정보 조회 성공")
+                                .build(), HttpStatus.OK);
+            } else {
+                System.out.println("❌ Member not found for email: " + email);
+                return new ResponseEntity<>(
+                        CommonDto.builder()
+                                .result(null)
+                                .status_code(HttpStatus.NOT_FOUND.value())
+                                .status_message("사용자를 찾을 수 없습니다.")
+                                .build(), HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            System.err.println("💥 Error occurred: " + e.getMessage());
+            e.printStackTrace();
+
+            return new ResponseEntity<>(
+                    CommonDto.builder()
+                            .result(null)
+                            .status_code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .status_message("사용자 정보 조회 중 오류가 발생했습니다: " + e.getMessage())
+                            .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 //    google로그인 메서드
     @PostMapping("/google/doLogin")
     public ResponseEntity<?> googleLogin(@RequestBody RedirectDto redirectDto){
