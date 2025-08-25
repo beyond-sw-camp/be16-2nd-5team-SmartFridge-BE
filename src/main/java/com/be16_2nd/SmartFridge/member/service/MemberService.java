@@ -25,7 +25,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UUID save(MemberCreateDto memberCreateDto){
+    public Member save(MemberCreateDto memberCreateDto){
         if (memberRepository.findByEmail(memberCreateDto.getEmail()).isPresent()){
             throw new IllegalArgumentException("이미 존재하는 이메일 입니다.");
         }
@@ -36,7 +36,7 @@ public class MemberService {
             throw new IllegalArgumentException("비밀번호를 확인해 주세요");
         }
         Member member = memberRepository.save(memberCreateDto.toEntity(passwordEncoder.encode(memberCreateDto.getPassword())));
-        return member.getId();
+        return member;
     }
 
     public Member doLogin(LoginReqDto loginReqDto){
@@ -53,6 +53,10 @@ public class MemberService {
             throw new IllegalArgumentException("id, email또는 비밀번호가 일치하지 않습니다.");
         }
         return optionalMember.get();
+    }
+    public Member findByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .orElse(null);
     }
 
     public Member getMemberBySocialId(String socialId){

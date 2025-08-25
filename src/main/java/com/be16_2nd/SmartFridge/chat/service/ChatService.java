@@ -25,7 +25,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /*
 * 채팅 서비스
@@ -115,6 +114,19 @@ public class ChatService {
                     .build();
             chatMessageRepository.save(chatMessage);
 
+            // 이미지 저장
+            if(!chatMessageDto.getImageUrls().isEmpty()){
+                for (String imageUrl : chatMessageDto.getImageUrls()){
+                    chatMessage.getChatMessageImages().add(
+                            ChatMessageImage.builder()
+                                    .chatMessage(chatMessage)
+                                    .imageUrl(imageUrl)
+                                    .build()
+                    );
+                }
+            }
+            chatRoom.updateLastMessageAt(chatMessage.getCreatedTime());
+
             // 사용자별로 읽음여부 저장
             List<ChatParticipant> chatParticipants = chatParticipantRepository.findByPurchaseChatRoom(chatRoom);
             for(ChatParticipant chatParticipant : chatParticipants){
@@ -131,13 +143,11 @@ public class ChatService {
         return chatMessage;
     }
 
-    public ChatMessageEmailDto saveMessageWithEmails(Long roomId, ChatMessageDto chatMessageReqDto) {
-        ChatMessage chatMessage = saveMessage(roomId, chatMessageReqDto);
-
+    public ChatMessageEmailDto saveMessageWithEmails(ChatMessage chatMessage) {
         String senderEmail = chatMessage.getSender().getEmail();
         List<String> receiverEmails;
 
-        if (chatMessage.getChatRoomType().equals(ChatRoomType.MANAGER.toString())) {
+        if (chatMessage.getChatRoomType().equals(ChatRoomType.MANAGER)) {
             // 1:1 관리자 채팅
             Fridge fridge = chatMessage.getManagerChatRoom().getFridge();
             FridgeMember managerFridgeMember = fridgeMemberRepository
@@ -153,7 +163,7 @@ public class ChatService {
 
             receiverEmails = List.of(receiverEmail);
 
-        } else if (chatMessage.getChatRoomType().equals(ChatRoomType.PURCHASE.toString())) {
+        } else if (chatMessage.getChatRoomType().equals(ChatRoomType.PURCHASE)) {
             // 공동구매 채팅
             receiverEmails = chatMessage.getPurchaseChatRoom().getParticipants().stream()
                     .map(ChatParticipant::getMember)
@@ -253,6 +263,7 @@ public class ChatService {
                     .message(chatMessage.getContents())
                     .imageUrls(imageUrls)
                     .senderEmail(chatMessage.getSender().getEmail())
+                    .senderName(chatMessage.getSender().getName())
                     .timestamp(chatMessage.getCreatedTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH시 mm분")))
                     .build();
             chatMessageDtos.add(chatMessageDto);
