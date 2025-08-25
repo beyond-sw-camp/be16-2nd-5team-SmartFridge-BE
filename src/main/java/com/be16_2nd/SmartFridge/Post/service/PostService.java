@@ -29,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -212,4 +211,13 @@ public class PostService {
         postStatsService.removeLike(post.getId(), member.getId());
         rabbitMqService.publishUnLikeUpdate(post.getId(),member.getId());
     }
+
+    public List<PostCategoryResDto> findAllCategories() {
+
+        List<PostCategory> categories = postCategoryRepository.findAll();
+        return categories.stream()
+                .map(PostCategoryResDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
 }

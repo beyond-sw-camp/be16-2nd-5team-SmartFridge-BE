@@ -13,7 +13,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Builder
-@ToString
 @Where(clause = "del_yn='N'")
 @Setter
 public class Member extends BaseTimeEntity {
