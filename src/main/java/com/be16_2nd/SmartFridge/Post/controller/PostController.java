@@ -21,7 +21,7 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping("/create")
-    public ResponseEntity<?> create(@PathVariable("fridgeId") Long fridgeId, @ModelAttribute PostCreateDto createDto) {
+    public ResponseEntity<?> create(@PathVariable("fridgeId") Long fridgeId, @RequestBody PostCreateDto createDto) {
         Long postId = postService.createPost(fridgeId, createDto);
         return new ResponseEntity<>(
                 CommonDto.builder()

@@ -17,7 +17,6 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-@ToString
 public class Fridge extends BaseTimeEntity {
 
     @Id

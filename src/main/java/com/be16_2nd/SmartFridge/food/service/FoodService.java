@@ -61,14 +61,18 @@ public class FoodService {
     }
 
     public void deleteFood(Long fridgeId, Long foodId) {
-        fridgeAccessValidator.validate(fridgeId);
+        FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
         Food food = foodRepository.findById(foodId)
                 .orElseThrow(() -> new EntityNotFoundException("삭제할 식품을 찾을 수 없습니다. ID: " + foodId));
         if (!food.getFridge().getId().equals(fridgeId)) {
             throw new IllegalArgumentException("해당 냉장고에 존재하지 않는 식품입니다.");
         }
+        if (context.type() != Type.MANAGER && !food.getMember().getId().equals(context.member().getId())) {
+            throw new IllegalArgumentException("본인이 등록한 식품만 삭제할 수 있습니다.");
+        }
         foodRepository.delete(food);
     }
+
     @Transactional(readOnly = true)
     public FoodStatResDto foodStats(Long fridgeId) {
         fridgeAccessValidator.validate(fridgeId);
