@@ -92,6 +92,11 @@ public class FoodService {
         public FoodStatResDto foodStats(Long fridgeId) {
 
             FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
+            System.out.println("=== Food Stats Debug ===");
+            System.out.println("FridgeId: " + fridgeId);
+            System.out.println("Context Type: " + context.type());
+            System.out.println("Member ID: " + context.member().getId());
+            System.out.println("=========================");
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime threeDaysLater = now.plusDays(3);
 
@@ -100,7 +105,7 @@ public class FoodService {
             long expiringSoonCount;
 
             // 사용자의 역할을 확인합니다.
-            if (context.type().equals("MANAGER")) {
+            if (context.type() == Type.MANAGER) {
                 // MANAGER는 냉장고의 모든 음식 통계를 조회합니다. (임시 등록 포함)
                 totalCount = foodRepository.countByFridgeId(fridgeId);
                 expiredCount = foodRepository.countByFridgeIdAndExpirationDateTimeBefore(fridgeId, now);

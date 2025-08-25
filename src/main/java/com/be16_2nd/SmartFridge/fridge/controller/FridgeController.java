@@ -3,6 +3,7 @@ package com.be16_2nd.SmartFridge.fridge.controller;
 import com.be16_2nd.SmartFridge.common.dto.CommonDto;
 import com.be16_2nd.SmartFridge.fridge.dto.FridgeCreateDto;
 import com.be16_2nd.SmartFridge.fridge.dto.FridgeListDto;
+import com.be16_2nd.SmartFridge.fridge.dto.FridgeMemberResDto;
 import com.be16_2nd.SmartFridge.fridge.dto.FridgeUpdateDto;
 import com.be16_2nd.SmartFridge.fridge.service.FridgeService;
 import jakarta.validation.Valid;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -46,12 +48,13 @@ public class FridgeController {
         );
     }
 
-    @GetMapping("/{fridgeId}")
-    public ResponseEntity<?> fridgeDetail(@PathVariable Long fridgeId){
+    @GetMapping("/{fridgeId}/members")
+    public ResponseEntity<?> fridgeMember(@PathVariable Long fridgeId){
+        List<FridgeMemberResDto> members = fridgeService.findByFridgeMember(fridgeId);
         return new ResponseEntity<>(
                 CommonDto
                         .builder()
-                        .result(fridgeService.findByFridgeId(fridgeId))
+                        .result(members)
                         .status_code(HttpStatus.OK.value())
                         .status_message("OK")
                         .build(), HttpStatus.OK);
@@ -111,5 +114,31 @@ public class FridgeController {
                         .build(),HttpStatus.OK);
     }
 
+    @PatchMapping("/{fridgeId}/delegateManager")
+    public ResponseEntity<?> delegateManager(
+            @PathVariable Long fridgeId,
+            @RequestParam("memberId") UUID memberId) {
+        fridgeService.delegateManager(fridgeId, memberId);
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("매니저 권한이 성공적으로 위임되었습니다.")
+                        .build(),
+                HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{fridgeId}/members/{memberId}")
+    public ResponseEntity<?> removeMember(
+            @PathVariable Long fridgeId,
+            @PathVariable("memberId") UUID memberId) {
+        fridgeService.removeMember(fridgeId, memberId);
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("멤버를 성공적으로 삭제했습니다.")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
 
 }
