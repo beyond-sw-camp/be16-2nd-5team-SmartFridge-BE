@@ -1,9 +1,14 @@
 package com.be16_2nd.SmartFridge.inquiry.domain;
 
+import com.be16_2nd.SmartFridge.common.domain.BaseTimeEntity;
 import com.be16_2nd.SmartFridge.fridge.domain.Fridge;
+import com.be16_2nd.SmartFridge.inquiryComment.domain.InquiryComment;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -11,7 +16,7 @@ import lombok.*;
 @Getter
 @Builder
 @ToString
-public class Inquiry {
+public class Inquiry extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,8 +29,7 @@ public class Inquiry {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fridge_id")
-    private Fridge fridge;
-
+    // 답변 리스트 추가 (InquiryComment와 연관)
+    @OneToMany(mappedBy = "inquiry", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<InquiryComment> comments = new ArrayList<>();
 }

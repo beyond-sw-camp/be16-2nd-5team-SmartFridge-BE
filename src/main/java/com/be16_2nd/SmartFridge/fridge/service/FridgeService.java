@@ -2,6 +2,7 @@ package com.be16_2nd.SmartFridge.fridge.service;
 
 import com.be16_2nd.SmartFridge.Post.repository.PostRepository;
 import com.be16_2nd.SmartFridge.chat.repository.ManagerChatRoomRepository;
+import com.be16_2nd.SmartFridge.common.service.FridgeAccessValidator;
 import com.be16_2nd.SmartFridge.chat.service.ManagerChatRoomLifecycle;
 import com.be16_2nd.SmartFridge.common.service.FridgeAccessValidator;
 import com.be16_2nd.SmartFridge.food.domain.Food;
@@ -15,6 +16,8 @@ import com.be16_2nd.SmartFridge.fridge.repository.FridgeMemberRepository;
 import com.be16_2nd.SmartFridge.fridge.repository.FridgeRepository;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
+import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
+import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -36,6 +39,8 @@ public class FridgeService {
     private final FridgeMemberRepository fridgeMemberRepository;
     private final ManagerChatRoomRepository managerChatRoomRepository;
     private final ManagerChatRoomLifecycle managerChatRoomLifecycle;
+    private final NotificationService notificationService;
+
     private final FridgeAccessValidator fridgeAccessValidator;
     private final FoodRepository foodRepository;
     private final PostRepository postRepository;
@@ -128,6 +133,12 @@ public class FridgeService {
                 .build());
 
         managerChatRoomLifecycle.createManagerChatRoom(member, fridge);
+
+        Member receiver = fridgeMemberRepository.findByFridgeAndType(fridge, Type.MANAGER)
+                .orElseThrow(() -> new EntityNotFoundException("")).getMember();
+
+        // 알림 발송 + db 저장
+        notificationService.create(member, receiver, NotificationType.NEW_MEMBER, fridge);
 
         return fridge.getId();
     }

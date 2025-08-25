@@ -90,4 +90,10 @@ public class MemberService {
         Member member = memberRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("존재하지 않는 회원입니다."));
         member.delete(member);
     }
+
+    public Member getCurrentMember() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
+    }
 }

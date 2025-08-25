@@ -1,14 +1,17 @@
 package com.be16_2nd.SmartFridge.food.service;
 
 import com.be16_2nd.SmartFridge.common.service.FridgeAccessValidator;
+import com.be16_2nd.SmartFridge.fridge.domain.Fridge;
 import com.be16_2nd.SmartFridge.fridge.domain.Type;
 import com.be16_2nd.SmartFridge.food.domain.Food;
 import com.be16_2nd.SmartFridge.food.dto.*;
 import com.be16_2nd.SmartFridge.food.repository.FoodRepository;
+import com.be16_2nd.SmartFridge.fridge.repository.FridgeMemberRepository;
 import com.be16_2nd.SmartFridge.member.domain.Member;
+import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
+import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
@@ -31,11 +34,22 @@ public class FoodService {
 
     private final FoodRepository foodRepository;
     private final FridgeAccessValidator fridgeAccessValidator;
+    private final NotificationService notificationService;
+    private final FridgeMemberRepository fridgeMemberRepository;
 
     public FoodResDto registerFood(Long fridgeId, FoodCreateDto foodCreateDto) {
         FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
         Food food = foodCreateDto.toEntity(context.member(), context.fridge());
         Food savedFood = foodRepository.save(food);
+
+        Fridge fridge = context.fridge();
+        Member receiver = fridgeMemberRepository.findByFridgeAndType(fridge, Type.MANAGER)
+                .orElseThrow(() -> new EntityNotFoundException("")).getMember();
+        Member sender = context.member();
+
+        // 식자재 등록 알림 (사용자 -> 냉장고 관리자)
+        notificationService.create(sender, receiver, NotificationType.NEW_FOOD, food);
+
         return FoodResDto.fromEntity(savedFood);
     }
 

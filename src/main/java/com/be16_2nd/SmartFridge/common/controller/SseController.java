@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -21,15 +24,47 @@ public class SseController {
 
     @GetMapping("/connect/notification")
     public SseEmitter subscribe() {
+        log.info("현재 registry 상태: {}", sseEmitterRegistry.getAllKeys());
+        // SSE 연결 시간: 4시간
         SseEmitter sseEmitter = new SseEmitter(14400 * 60 * 1000L);
+
+        // JWT 인증 정보에서 사용자 이메일 가져오기
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("SSE 연결 시도됨. 사용자 email: {}", email);
+
+//        // 레지스트리에 추가
         sseEmitterRegistry.addSseEmitter(email, sseEmitter);
+        log.info("현재 registry 상태: {}", sseEmitterRegistry.getAllKeys());
+//
+//        // 연결 종료 처리: 클라이언트 끊기, 타임아웃, 에러 발생 시
+//        sseEmitter.onCompletion(() -> {
+//            log.info("SSE 연결 완료, 레지스트리에서 제거: {}", email);
+//            sseEmitterRegistry.removeEmitter(email);
+//        });
+//        sseEmitter.onTimeout(() -> {
+//            log.info("SSE 연결 타임아웃, 레지스트리에서 제거: {}", email);
+//            sseEmitterRegistry.removeEmitter(email);
+//            sseEmitter.complete();
+//        });
+//        sseEmitter.onError(e -> {
+//            log.warn("SSE 연결 중 오류 발생, 레지스트리에서 제거: {}", email, e);
+//            sseEmitterRegistry.removeEmitter(email);
+//            sseEmitter.complete();
+//        });
+
         try {
-            sseEmitter.send(SseEmitter.event().name("connect").data("연결 완료"));
+            // 최초 연결 이벤트 전송
+            sseEmitter.send(SseEmitter.event()
+                    .name("connect")
+                    .data("연결 완료"));
+            log.info("현재 registry 상태: {}", sseEmitterRegistry.getAllKeys());
+
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            // 최초 연결 시 전송 실패
+            log.error("SSE 초기 연결 실패: {}", email, e);
+            sseEmitter.complete();
         }
+
         return sseEmitter;
     }
 

@@ -1,5 +1,6 @@
 package com.be16_2nd.SmartFridge.inquiryComment.service;
 
+import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
 import com.be16_2nd.SmartFridge.notification.service.NotificationPublisher;
 import com.be16_2nd.SmartFridge.inquiry.domain.Inquiry;
 import com.be16_2nd.SmartFridge.inquiry.repository.InquiryRepository;
@@ -9,7 +10,6 @@ import com.be16_2nd.SmartFridge.inquiryComment.dto.InquiryCommentResDto;
 import com.be16_2nd.SmartFridge.inquiryComment.repository.InquiryCommentRepository;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
-import com.be16_2nd.SmartFridge.notification.domain.Notification;
 import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +36,9 @@ public class InquiryCommentService {
         Member receiver = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("등록되지 않은 회원입니다."));
         InquiryComment inquiryComment = inquiryCommentRepository.save(inquiryCommentCreateDto.toEntity(inquiryCommentCreateDto, inquiry));
-        Notification notification = Notification.fromInquiryComment(sender, receiver, inquiryComment);
-        notificationService.create(notification);
+
+        // 알림 발송 + db 저장
+        notificationService.create(sender, receiver, NotificationType.ADMIN_REPLY, inquiryComment);
         return new InquiryCommentResDto(inquiryComment);
     }
 }

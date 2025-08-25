@@ -1,19 +1,21 @@
 package com.be16_2nd.SmartFridge.inquiry.service;
 
-import com.be16_2nd.SmartFridge.fridge.domain.Fridge;
-import com.be16_2nd.SmartFridge.fridge.repository.FridgeRepository;
 import com.be16_2nd.SmartFridge.inquiry.dto.InquiryCreateDto;
 import com.be16_2nd.SmartFridge.inquiry.domain.Inquiry;
+import com.be16_2nd.SmartFridge.inquiry.dto.InquiryResDto;
 import com.be16_2nd.SmartFridge.inquiry.repository.InquiryRepository;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
-import com.be16_2nd.SmartFridge.notification.domain.Notification;
+import com.be16_2nd.SmartFridge.member.service.MemberService;
+import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
 import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -23,19 +25,25 @@ public class InquiryService {
     private final InquiryRepository inquiryRepository;
     private final MemberRepository memberRepository;
     private final NotificationService notificationService;
-    private final FridgeRepository fridgeRepository;
+    private final MemberService memberService;
 
-    public Long create(InquiryCreateDto inquiryCreateDto, Long fridgeId) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Member sender = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("등록되지 않은 회원입니다."));
+    public Long create(InquiryCreateDto inquiryCreateDto) {
+        Member sender = memberService.getCurrentMember();
         Member receiver = memberRepository.findByEmail("admin@naver.com")
                 .orElseThrow(() -> new EntityNotFoundException("등록되지 않은 관리자입니다."));
-        Fridge fridge = fridgeRepository.findById(fridgeId).orElseThrow(() -> new EntityNotFoundException("등록되지 않은 냉장고입니다."));
-        Inquiry inquiry = inquiryRepository.save(inquiryCreateDto.toEntity(sender, fridge));
+        
+        Inquiry inquiry = inquiryRepository.save(inquiryCreateDto.toEntity(sender));
 
-        Notification notification = Notification.fromInquiry(sender, receiver, inquiry);
-        notificationService.create(notification);
+        // 알림 발송 + db 저장
+        notificationService.create(sender, receiver, NotificationType.NEW_INQUIRY, inquiry);
+
         return inquiry.getInquiryId();
+    }
+
+    // 문의 목록 조회
+    public List<InquiryResDto> getInquiryList() {
+        Member member = memberService.getCurrentMember();
+        return inquiryRepository.findByMember(member).stream().map(InquiryResDto::fromEntity)
+                .collect(Collectors.toList());
     }
 }

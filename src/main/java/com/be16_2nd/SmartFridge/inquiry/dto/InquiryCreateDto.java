@@ -17,13 +17,12 @@ public class InquiryCreateDto {
     private String contents;
 
 
-    public Inquiry toEntity(Member member, Fridge fridge) {
+    public Inquiry toEntity(Member member) {
         return Inquiry.builder()
                 .type(type)
                 .title(title)
                 .contents(contents)
                 .member(member)
-                .fridge(fridge)
                 .build();
     }
 }

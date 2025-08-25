@@ -47,10 +47,8 @@ public class FoodExpScheduler  {
 
             // 유통기한 임박 기간에 따른 메세지 조합
             String daysLeftMessage = getDaysLeftMessage(food.getExpirationDateTime().toLocalDate(), today);
-            // 알림 객체 생성 후 메세지 발송
-            Notification notification = Notification.fromExpiration(receiver, food, daysLeftMessage);
-            // 알림 db에 저장
-            notificationService.create(notification);
+            // 알림 객체 생성 후 메세지 발송 + db 저장
+            notificationService.createAndSendForExpiration(receiver, food, daysLeftMessage);
         }
 
     }

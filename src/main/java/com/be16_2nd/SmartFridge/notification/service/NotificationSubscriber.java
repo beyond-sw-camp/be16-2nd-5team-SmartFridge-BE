@@ -35,6 +35,8 @@ public class NotificationSubscriber implements MessageListener {
                             .name(sseMessageDTO.getType())
                             .data(eventData));
                     log.info("실시간 알림 전송 완료: {}", sseMessageDTO.getReceiverEmail());
+                    log.info("실시간 알림 전송 내용: {}", sseMessageDTO);
+
                 } catch (IOException e) {
                     // 전송 중 오류 발생 시 Emitter 제거
                     log.error("SSE 전송 오류. Emitter 제거. 수신자: {}", sseMessageDTO.getReceiverEmail(), e);
