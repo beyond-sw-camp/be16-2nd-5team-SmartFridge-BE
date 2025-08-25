@@ -1,7 +1,11 @@
 package com.be16_2nd.SmartFridge.notification.domain;
 
+import com.be16_2nd.SmartFridge.Post.domain.Post;
 import com.be16_2nd.SmartFridge.common.domain.BaseTimeEntity;
+import com.be16_2nd.SmartFridge.food.domain.Food;
 import com.be16_2nd.SmartFridge.fridge.domain.Fridge;
+import com.be16_2nd.SmartFridge.inquiry.domain.Inquiry;
+import com.be16_2nd.SmartFridge.inquiryComment.domain.InquiryComment;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.*;
