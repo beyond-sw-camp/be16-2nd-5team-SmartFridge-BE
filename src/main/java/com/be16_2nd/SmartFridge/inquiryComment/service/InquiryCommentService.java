@@ -1,5 +1,6 @@
 package com.be16_2nd.SmartFridge.inquiryComment.service;
 
+import com.be16_2nd.SmartFridge.inquiry.domain.InquiryStatus;
 import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
 import com.be16_2nd.SmartFridge.notification.service.NotificationPublisher;
 import com.be16_2nd.SmartFridge.inquiry.domain.Inquiry;
@@ -36,6 +37,7 @@ public class InquiryCommentService {
         Member receiver = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("등록되지 않은 회원입니다."));
         InquiryComment inquiryComment = inquiryCommentRepository.save(inquiryCommentCreateDto.toEntity(inquiryCommentCreateDto, inquiry));
+        inquiry.setStatus(InquiryStatus.COMPLETED);
 
         // 알림 발송 + db 저장
         notificationService.create(sender, receiver, NotificationType.ADMIN_REPLY, inquiryComment);

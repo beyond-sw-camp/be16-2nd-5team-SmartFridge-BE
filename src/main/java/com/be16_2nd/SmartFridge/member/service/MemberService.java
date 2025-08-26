@@ -1,18 +1,22 @@
 package com.be16_2nd.SmartFridge.member.service;
 
+import com.be16_2nd.SmartFridge.email.service.EmailService;
 import com.be16_2nd.SmartFridge.member.domain.Member;
+import com.be16_2nd.SmartFridge.member.domain.ResetToken;
 import com.be16_2nd.SmartFridge.member.domain.SocialType;
-import com.be16_2nd.SmartFridge.member.dto.LoginReqDto;
-import com.be16_2nd.SmartFridge.member.dto.MemberCreateDto;
-import com.be16_2nd.SmartFridge.member.dto.MemberResDto;
+import com.be16_2nd.SmartFridge.member.dto.*;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
+import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,10 +24,21 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
-@RequiredArgsConstructor
 public class MemberService {
+
+
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+    @Qualifier("emailRedisTemplate")
+    private final RedisTemplate<String, Object> emailRedisTemplate;
+
+    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, EmailService emailService, RedisTemplate<String, Object> emailRedisTemplate) {
+        this.memberRepository = memberRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
+        this.emailRedisTemplate = emailRedisTemplate;
+    }
 
     public Member save(MemberCreateDto memberCreateDto){
         if (memberRepository.findByEmail(memberCreateDto.getEmail()).isPresent()){
@@ -100,4 +115,43 @@ public class MemberService {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
     }
+
+//    public boolean sendResetToken(ForgotPasswordReqDto forgotPasswordReqDto) throws MessagingException {
+//        Member member = memberRepository.findByEmail(forgotPasswordReqDto.getEmail())
+//                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 계정입니다."));
+//
+//        String token = UUID.randomUUID().toString();
+//        ResetToken resetToken = new ResetToken(token, forgotPasswordReqDto.getEmail());
+//        String redisKey = "password_reset:" + forgotPasswordReqDto.getEmail();
+//        emailRedisTemplate.opsForValue().set(redisKey, resetToken, Duration.ofMinutes(30));
+//
+//        // 4. 이메일 발송
+//        emailService.sendEmailForUpdatePw(forgotPasswordReqDto.getEmail(), resetToken);
+//    }
+//
+//        return true;
+//    }
+//
+//    public boolean resetPassword(ResetPasswordReqDto resetPasswordReqDto) {
+//        ResetToken resetToken = (ResetToken) emailRedisTemplate.opsForValue()
+//                .get("reset_token:" + resetPasswordReqDto.getToken());
+//
+//        if (resetToken == null) {
+//            return false;
+//        }
+//
+//        Optional<Member> optMember = memberRepository.findByEmail(resetToken.getEmail());
+//        if (optMember.isEmpty()) {
+//            emailRedisTemplate.delete("reset_token:" + resetPasswordReqDto.getToken());
+//            return false;
+//        }
+//
+//        Member member = optMember.get();
+//        member.setPassword(passwordEncoder.encode(resetPasswordReqDto.getNewPassword()));
+//        memberRepository.save(member);
+//
+//        emailRedisTemplate.delete("reset_token:" + resetPasswordReqDto.getToken());
+//
+//        return true;
+//    }
 }

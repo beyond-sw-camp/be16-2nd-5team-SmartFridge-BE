@@ -19,6 +19,7 @@ public class ChatMessageDto {
     private String chatRoomType;
     private String message;
     private String senderEmail;
+    private String senderName;
     private List<String> imageUrls;
 
     private String timestamp;
@@ -31,6 +32,7 @@ public class ChatMessageDto {
                 .imageUrls(chatMessage.getChatMessageImages().stream().map(ChatMessageImage::getImageUrl).toList())
                 .message(chatMessage.getContents())
                 .senderEmail(chatMessage.getSender().getEmail())
+                .senderName(chatMessage.getSender().getName())
                 .build();
     }
 
@@ -42,6 +44,7 @@ public class ChatMessageDto {
                 .imageUrls(chatMessage.getChatMessageImages().stream().map(ChatMessageImage::getImageUrl).toList())
                 .message(chatMessage.getContents())
                 .senderEmail(chatMessage.getSender().getEmail())
+                .senderName(chatMessage.getSender().getName())
                 .build();
     }
 }

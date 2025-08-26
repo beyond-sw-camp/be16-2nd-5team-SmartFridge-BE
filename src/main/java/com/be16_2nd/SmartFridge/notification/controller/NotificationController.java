@@ -46,20 +46,6 @@ public class NotificationController {
                 , HttpStatus.OK);
     }
 
-    @GetMapping("/badge/inquiry")
-    public ResponseEntity<?> getInquiryBadge() {
-        Member member = memberService.getCurrentMember();
-        long unreadCount = notificationService.countUnreadInquiries(member);
-        return ResponseEntity.ok(Map.of("unreadCount", unreadCount));
-    }
-
-    @GetMapping("/badge/chat")
-    public ResponseEntity<?> getChatBadge() {
-        Member member = memberService.getCurrentMember();
-        long unreadCount = notificationService.countUnreadChats(member);
-        return ResponseEntity.ok(Map.of("unreadCount", unreadCount));
-    }
-
     // 알림 삭제
     @DeleteMapping("/delete/{notificationId}")
     public ResponseEntity<?> deleteNotification(@PathVariable Long notificationId) {

@@ -15,7 +15,6 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class InquiryCreateDto {
     private InquiryType inquiryType;
     private String title;
