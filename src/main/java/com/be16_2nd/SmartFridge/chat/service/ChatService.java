@@ -263,6 +263,7 @@ public class ChatService {
                     .message(chatMessage.getContents())
                     .imageUrls(imageUrls)
                     .senderEmail(chatMessage.getSender().getEmail())
+                    .senderName(chatMessage.getSender().getName())
                     .timestamp(chatMessage.getCreatedTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH시 mm분")))
                     .build();
             chatMessageDtos.add(chatMessageDto);
