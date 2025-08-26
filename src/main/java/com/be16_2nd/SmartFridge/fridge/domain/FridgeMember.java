@@ -10,6 +10,7 @@ import lombok.*;
 @Entity
 @Builder
 @Getter
+@Setter
 public class FridgeMember extends BaseTimeEntity {
 
     @Id

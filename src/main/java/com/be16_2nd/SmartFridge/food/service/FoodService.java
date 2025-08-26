@@ -88,40 +88,40 @@ public class FoodService {
         foodRepository.delete(food);
     }
 
-        @Transactional(readOnly = true)
-        public FoodStatResDto foodStats(Long fridgeId) {
+    @Transactional(readOnly = true)
+    public FoodStatResDto foodStats(Long fridgeId) {
 
-            FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime threeDaysLater = now.plusDays(3);
+        FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime threeDaysLater = now.plusDays(3);
 
-            long totalCount;
-            long expiredCount;
-            long expiringSoonCount;
+        long totalCount;
+        long expiredCount;
+        long expiringSoonCount;
 
-            // 사용자의 역할을 확인합니다.
-            if (context.type().equals("MANAGER")) {
-                // MANAGER는 냉장고의 모든 음식 통계를 조회합니다. (임시 등록 포함)
-                totalCount = foodRepository.countByFridgeId(fridgeId);
-                expiredCount = foodRepository.countByFridgeIdAndExpirationDateTimeBefore(fridgeId, now);
-                expiringSoonCount = foodRepository.countByFridgeIdAndExpirationDateTimeBetween(fridgeId, now, threeDaysLater);
-            } else {
-                // COMMON 사용자는 자신이 등록한 음식 통계만 조회합니다. (임시 등록 포함)
-                UUID memberId = context.member().getId();
-                totalCount = foodRepository.countByFridgeIdAndMemberId(fridgeId, memberId);
-                expiredCount = foodRepository.countByFridgeIdAndMemberIdAndExpirationDateTimeBefore(fridgeId, memberId, now);
-                expiringSoonCount = foodRepository.countByFridgeIdAndMemberIdAndExpirationDateTimeBetween(fridgeId, memberId, now, threeDaysLater);
-            }
-
-            long freshCount = totalCount - expiredCount - expiringSoonCount;
-
-            return FoodStatResDto.builder()
-                    .totalCount(totalCount)
-                    .freshCount(freshCount)
-                    .expiringSoonCount(expiringSoonCount)
-                    .expiredCount(expiredCount)
-                    .build();
+        // 사용자의 역할을 확인합니다.
+        if (context.type() == Type.MANAGER) {
+            // MANAGER는 냉장고의 모든 음식 통계를 조회합니다. (임시 등록 포함)
+            totalCount = foodRepository.countByFridgeId(fridgeId);
+            expiredCount = foodRepository.countByFridgeIdAndExpirationDateTimeBefore(fridgeId, now);
+            expiringSoonCount = foodRepository.countByFridgeIdAndExpirationDateTimeBetween(fridgeId, now, threeDaysLater);
+        } else {
+            // COMMON 사용자는 자신이 등록한 음식 통계만 조회합니다. (임시 등록 포함)
+            UUID memberId = context.member().getId();
+            totalCount = foodRepository.countByFridgeIdAndMemberId(fridgeId, memberId);
+            expiredCount = foodRepository.countByFridgeIdAndMemberIdAndExpirationDateTimeBefore(fridgeId, memberId, now);
+            expiringSoonCount = foodRepository.countByFridgeIdAndMemberIdAndExpirationDateTimeBetween(fridgeId, memberId, now, threeDaysLater);
         }
+
+    long freshCount = totalCount - expiredCount - expiringSoonCount;
+
+    return FoodStatResDto.builder()
+            .totalCount(totalCount)
+            .freshCount(freshCount)
+            .expiringSoonCount(expiringSoonCount)
+            .expiredCount(expiredCount)
+            .build();
+}
 
     private Specification<Food> createFoodSpecification(Long fridgeId, Type userType, Member member, Boolean isShared, FoodSearchDto searchDto) {
         return (root, query, cb) -> {
