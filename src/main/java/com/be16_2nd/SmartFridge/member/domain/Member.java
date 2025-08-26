@@ -20,7 +20,7 @@ public class Member extends BaseTimeEntity {
     @GeneratedValue
     @Column(nullable = false, updatable = false)
     private UUID id;
-    @Column(length = 10)
+    @Column(length = 20)
     private String name;
     @Column(length = 50, unique = true)
     private String email;
