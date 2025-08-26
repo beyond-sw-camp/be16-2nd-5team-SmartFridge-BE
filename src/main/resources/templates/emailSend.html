@@ -1,51 +1,567 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>인증코드 구현하기</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartFridge - 이메일 인증</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .container {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        max-width: 500px;
+        width: 100%;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .logo {
+        display: inline-block;
+        background: linear-gradient(135deg, #20B2AA 0%, #1a9b94 100%);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        margin-bottom: 20px;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 8px;
+    }
+
+    .subtitle {
+        font-size: 16px;
+        color: #7f8c8d;
+        line-height: 1.6;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #2c3e50;
+        margin-bottom: 8px;
+    }
+
+    .input-container {
+        position: relative;
+        display: flex;
+        gap: 12px;
+    }
+
+    .form-input {
+        flex: 1;
+        padding: 16px 20px;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        font-size: 16px;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #20B2AA;
+        background-color: white;
+        box-shadow: 0 0 0 3px rgba(32, 178, 170, 0.1);
+    }
+
+    .btn {
+        padding: 16px 24px;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #20B2AA 0%, #1a9b94 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(32, 178, 170, 0.3);
+    }
+
+    .btn-primary:hover {
+        box-shadow: 0 6px 20px rgba(32, 178, 170, 0.4);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-secondary:hover {
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    .verification-section {
+        display: none;
+        background: #f8f9fa;
+        border-radius: 16px;
+        padding: 24px;
+        margin-top: 24px;
+        border-left: 4px solid #20B2AA;
+    }
+
+    .verification-section.show {
+        display: block;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .verification-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .code-input {
+        text-align: center;
+        font-size: 24px !important;
+        font-weight: 600;
+        letter-spacing: 4px;
+        font-family: 'Courier New', monospace;
+    }
+
+    .alert {
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin: 16px 0;
+        font-size: 14px;
+        display: none;
+    }
+
+    .alert.show {
+        display: block;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .alert-success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
+
+    .alert-error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+
+    .alert-info {
+        background: #cce7ff;
+        border: 1px solid #99d3ff;
+        color: #004085;
+    }
+
+    .instructions {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        border-radius: 12px;
+        padding: 16px;
+        margin: 16px 0;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .cooldown {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 8px;
+    }
+
+    .loading {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+        .container {
+            padding: 24px;
+            margin: 10px;
+        }
+
+        .input-container {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .title {
+            font-size: 24px;
+        }
+    }
+  </style>
 </head>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <i class="fas fa-snowflake"></i> SmartFridge
+    </div>
+    <h1 class="title">이메일 인증</h1>
+    <p class="subtitle">
+      회원가입을 완료하기 위해<br>
+      이메일 주소를 인증해주세요
+    </p>
+  </div>
+
+  <!-- Email Input Section -->
+  <div class="form-group">
+    <label class="form-label" for="mail">
+      <i class="fas fa-envelope"></i> 이메일 주소
+    </label>
+    <div class="input-container">
+      <input type="email"
+             class="form-input"
+             id="mail"
+             name="mail"
+             placeholder="example@email.com"
+             autocomplete="email">
+      <button type="button"
+              class="btn btn-primary"
+              id="sendBtn"
+              onclick="sendNumber()">
+                    <span class="btn-text">
+                        <i class="fas fa-paper-plane"></i> 인증번호 발송
+                    </span>
+        <span class="loading" style="display: none;"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div id="alertContainer"></div>
+
+  <!-- Verification Code Section -->
+  <div id="mail_number" class="verification-section">
+    <h3 class="verification-title">
+      <i class="fas fa-shield-alt"></i> 인증번호 입력
+    </h3>
+
+    <div class="instructions">
+      <i class="fas fa-info-circle"></i>
+      <strong>안내사항:</strong><br>
+      • 이메일로 발송된 6자리 인증번호를 입력해주세요<br>
+      • 인증번호는 30분 후 만료됩니다<br>
+      • 이메일이 오지 않았다면 스팸함을 확인해주세요
+    </div>
+
+    <div class="form-group">
+      <input type="text"
+             class="form-input code-input"
+             id="number"
+             name="number"
+             placeholder="123ABC"
+             maxlength="6"
+             autocomplete="off">
+    </div>
+
+    <button type="button"
+            class="btn btn-secondary"
+            id="confirmBtn"
+            onclick="confirmNumber()">
+                <span class="btn-text">
+                    <i class="fas fa-check-circle"></i> 인증 확인
+                </span>
+      <span class="loading" style="display: none;"></span>
+    </button>
+
+    <div class="cooldown" id="cooldownText" style="display: none;">
+      <i class="fas fa-clock"></i> <span id="cooldownTimer">60</span>초 후 재발송 가능
+    </div>
+  </div>
+
+  <!-- Hidden confirmation field -->
+  <input type="hidden" id="Confirm" name="Confirm" value="">
+</div>
+
 <script type="text/javascript">
+  let cooldownTimer = null;
+  let cooldownSeconds = 0;
+
+  function showAlert(message, type = 'info') {
+      const alertContainer = document.getElementById('alertContainer');
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type} show`;
+      alertDiv.innerHTML = `
+          <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+          ${message}
+      `;
+
+      // 기존 알림 제거
+      alertContainer.innerHTML = '';
+      alertContainer.appendChild(alertDiv);
+
+      // 5초 후 자동 제거
+      setTimeout(() => {
+          if (alertDiv.parentNode) {
+              alertDiv.classList.remove('show');
+              setTimeout(() => alertDiv.remove(), 300);
+          }
+      }, 5000);
+  }
+
+  function setButtonLoading(buttonId, loading) {
+      const button = document.getElementById(buttonId);
+      const btnText = button.querySelector('.btn-text');
+      const loadingSpinner = button.querySelector('.loading');
+
+      if (loading) {
+          btnText.style.display = 'none';
+          loadingSpinner.style.display = 'inline-block';
+          button.disabled = true;
+      } else {
+          btnText.style.display = 'inline-flex';
+          loadingSpinner.style.display = 'none';
+          button.disabled = false;
+      }
+  }
+
+  function startCooldown() {
+      cooldownSeconds = 60;
+      const cooldownText = document.getElementById('cooldownText');
+      const cooldownTimer = document.getElementById('cooldownTimer');
+      const sendBtn = document.getElementById('sendBtn');
+
+      cooldownText.style.display = 'block';
+      sendBtn.disabled = true;
+      sendBtn.querySelector('.btn-text').innerHTML = '<i class="fas fa-clock"></i> 재발송 대기중';
+
+      const interval = setInterval(() => {
+          cooldownSeconds--;
+          cooldownTimer.textContent = cooldownSeconds;
+
+          if (cooldownSeconds <= 0) {
+              clearInterval(interval);
+              cooldownText.style.display = 'none';
+              sendBtn.disabled = false;
+              sendBtn.querySelector('.btn-text').innerHTML = '<i class="fas fa-paper-plane"></i> 인증번호 재발송';
+          }
+      }, 1000);
+  }
+
+  function validateEmail(email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+  }
+
   function sendNumber() {
-      $("#mail_number").css("display", "block");
+      const email = $("#mail").val().trim();
+
+      // 이메일 유효성 검사
+      if (!email) {
+          showAlert('이메일 주소를 입력해주세요.', 'error');
+          return;
+      }
+
+      if (!validateEmail(email)) {
+          showAlert('올바른 이메일 주소를 입력해주세요.', 'error');
+          return;
+      }
+
+      setButtonLoading('sendBtn', true);
+
       $.ajax({
-          url: "/api/v1/email/send",
+          url: "/email/send",
           type: "post",
-          dataType: "json",
-          data: {"mail": $("#mail").val()},
+          dataType: "text", // JSON이 아닌 텍스트로 변경
+          data: {"mail": email},
           success: function (data) {
-              alert("인증번호 발송");
-              $("#Confirm").attr("value", data);
+              console.log('이메일 발송 성공:', data);
+              showAlert('인증번호가 이메일로 발송되었습니다. 이메일을 확인해주세요.', 'success');
+
+              // 인증번호 입력 섹션 표시
+              $("#mail_number").addClass('show');
+
+              // 쿨다운 시작
+              startCooldown();
+
+              // 포커스 이동
+              setTimeout(() => {
+                  $("#number").focus();
+              }, 500);
+          },
+          error: function(xhr, status, error) {
+              console.error('이메일 발송 실패:', xhr.responseText || error);
+              let errorMessage = '인증번호 발송에 실패했습니다.';
+
+              if (xhr.status === 400) {
+                  errorMessage = '잘못된 이메일 주소입니다.';
+              } else if (xhr.status === 500) {
+                  errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+              }
+
+              showAlert(errorMessage, 'error');
+          },
+          complete: function() {
+              setButtonLoading('sendBtn', false);
           }
       });
   }
 
   function confirmNumber() {
-      let mail = $("#mail").val();
-      let number = $("#number").val();
+      const mail = $("#mail").val().trim();
+      const number = $("#number").val().trim();
+
+      // 유효성 검사
+      if (!number) {
+          showAlert('인증번호를 입력해주세요.', 'error');
+          return;
+      }
+
+      if (number.length !== 6) {
+          showAlert('인증번호는 6자리입니다.', 'error');
+          return;
+      }
+
+      setButtonLoading('confirmBtn', true);
 
       $.ajax({
-         url: "/api/v1/email/verify",
-         type: "post",
-          dataType: "json",
+          url: "/email/verify",
+          type: "post",
+          dataType: "text", // JSON이 아닌 텍스트로 변경
           data: {"mail": mail, "verifyCode": number},
           success: function (data, status, xhr) {
-             console.log(status);
+              console.log('인증 응답:', data);
+              console.log('상태:', status);
+
+              // 응답 텍스트 분석
+              if (data && (data.includes('인증이 완료되었습니다') || data.includes('완료') || data.includes('성공'))) {
+                  showAlert('✅ 이메일 인증이 완료되었습니다!', 'success');
+                  $("#Confirm").val('verified');
+
+                  // 성공 시 폼 비활성화
+                  $("#number").prop('disabled', true);
+                  $("#confirmBtn").prop('disabled', true);
+                  $("#confirmBtn .btn-text").html('<i class="fas fa-check"></i> 인증 완료');
+
+              } else {
+                  showAlert('인증번호가 올바르지 않습니다. 다시 확인해주세요.', 'error');
+                  $("#number").focus().select();
+              }
+          },
+          error: function(xhr, status, error) {
+              console.error('인증 실패:', xhr.responseText || error);
+              showAlert('인증 처리 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
+              $("#number").focus().select();
+          },
+          complete: function() {
+              setButtonLoading('confirmBtn', false);
           }
       });
   }
+
+  // Enter 키 이벤트 처리
+  $(document).ready(function() {
+      $("#mail").keypress(function(e) {
+          if (e.which === 13) {
+              sendNumber();
+          }
+      });
+
+      $("#number").keypress(function(e) {
+          if (e.which === 13) {
+              confirmNumber();
+          }
+      });
+
+      // 인증번호 입력 시 자동 대문자 변환 및 숫자/영문자만 허용
+      $("#number").on('input', function() {
+          let value = $(this).val().toUpperCase().replace(/[^A-Z0-9]/g, '');
+          $(this).val(value);
+
+          // 6자리 입력 완료 시 자동 인증
+          if (value.length === 6) {
+              setTimeout(confirmNumber, 100);
+          }
+      });
+  });
 </script>
-<body>
-<div id="mail_input" name="mail_input">
-  <input type="text" name="mail" id="mail" placeholder="이메일 입력">
-  <button type="button" id="sendBtn" name="sendBtn" onclick="sendNumber()">인증번호</button>
-</div>
-<br>
-<div id="mail_number" name="mail_number" style="display: none">
-  <input type="text" name="number" id="number" placeholder="인증번호 입력">
-  <button type="button" name="confirmBtn" id="confirmBtn" onclick="confirmNumber()">이메일 인증</button>
-</div>
-<br>
-<input type="text" id="Confirm" name="Confirm" style="display: none" value="">
 </body>
 </html>

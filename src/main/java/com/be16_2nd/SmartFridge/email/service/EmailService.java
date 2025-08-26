@@ -6,6 +6,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -54,7 +55,7 @@ public class EmailService {
         return templateEngine.process("mail", context);
     }
 
-//     이메일 폼 생성
+    // 이메일 폼 생성
     private MimeMessage createEmailForm(String email) throws MessagingException {
         String authCode = createCode();
 
@@ -70,8 +71,10 @@ public class EmailService {
         return message;
     }
 
-//     인증코드 이메일 발송
+    // 인증코드 이메일 발송
     public void sendEmail(String toEmail) throws MessagingException {
+        log.info("EmailController.mailSend() email: {}", toEmail);
+
         if (redisUtil.existData(toEmail)) {
             redisUtil.deleteData(toEmail);
         }

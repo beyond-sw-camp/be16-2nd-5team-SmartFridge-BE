@@ -1,16 +1,84 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<body>
-<div style="margin:120px">
-    <div style="margin-bottom: 10px">
-        <h1>인증 코드 메일입니다.</h1>
-        <br/>
-        <h3 style="text-align: center;"> 아래 코드를 사이트에 입력해주십시오</h3>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFridge 이메일 인증</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f7fa; line-height: 1.6;">
+<div style="max-width: 600px; margin: 0 auto; background-color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+        <div style="display: inline-block; background: white; padding: 12px 20px; border-radius: 25px; margin-bottom: 20px;">
+            <h1 style="margin: 0; color: #667eea; font-size: 24px; font-weight: bold;">🧊 SmartFridge</h1>
+        </div>
+        <h2 style="color: white; margin: 0; font-size: 28px; font-weight: 300;">이메일 인증</h2>
     </div>
-    <div style="text-align: center;">
-        <h2 style="color: crimson;" th:text="${code}"></h2>
+
+    <!-- Main Content -->
+    <div style="padding: 40px 30px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-block; background: #f8f9ff; border-radius: 50%; width: 80px; height: 80px; line-height: 80px; margin-bottom: 20px;">
+                <span style="font-size: 36px;">📧</span>
+            </div>
+            <h3 style="color: #2c3e50; margin: 0 0 10px 0; font-size: 24px;">인증 코드가 도착했습니다!</h3>
+            <p style="color: #7f8c8d; margin: 0; font-size: 16px;">SmartFridge 회원가입을 완료하기 위해 아래 인증 코드를 입력해주세요.</p>
+        </div>
+
+        <!-- Verification Code -->
+        <div style="text-align: center; margin: 40px 0;">
+            <div style="background: linear-gradient(135deg, #20B2AA 0%, #1a9b94 100%); border-radius: 12px; padding: 25px; display: inline-block; box-shadow: 0 4px 15px rgba(32, 178, 170, 0.3);">
+                <p style="color: white; margin: 0 0 10px 0; font-size: 14px; font-weight: 500; letter-spacing: 1px;">인증 코드</p>
+                <h1 style="color: white; margin: 0; font-size: 36px; font-weight: bold; letter-spacing: 6px; font-family: 'Courier New', monospace;" th:text="${code}">123ABC</h1>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div style="background: #f8f9fa; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #20B2AA;">
+            <h4 style="color: #2c3e50; margin: 0 0 15px 0; font-size: 18px;">📋 인증 안내</h4>
+            <ul style="color: #555; margin: 0; padding-left: 20px; font-size: 14px;">
+                <li style="margin-bottom: 8px;">위의 <strong>6자리 인증 코드</strong>를 회원가입 페이지에 입력해주세요</li>
+                <li style="margin-bottom: 8px;">인증 코드는 <strong style="color: #e74c3c;">30분 후 만료</strong>됩니다</li>
+                <li style="margin-bottom: 8px;">코드는 <strong>영문자(대소문자)와 숫자의 조합</strong>입니다</li>
+                <li>본인이 요청하지 않은 인증이라면 이 이메일을 무시해주세요</li>
+            </ul>
+        </div>
+
     </div>
-    <br/>
+
+    <!-- Footer -->
+    <div style="background: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
+        <p style="color: #7f8c8d; margin: 0 0 10px 0; font-size: 14px;">
+            <strong>SmartFridge</strong> - 스마트한 냉장고 관리 서비스
+        </p>
+        <p style="color: #bdc3c7; margin: 0; font-size: 12px;">
+            이 메일은 SmartFridge 회원가입 과정에서 자동으로 발송된 메일입니다.<br>
+            문의사항이 있으시면 고객센터로 연락해주세요.
+        </p>
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e9ecef;">
+            <p style="color: #bdc3c7; margin: 0; font-size: 11px;">
+                © 2024 SmartFridge. All rights reserved.
+            </p>
+        </div>
+    </div>
 </div>
+
+<!-- Mobile Responsive -->
+<style>
+    @media only screen and (max-width: 600px) {
+        .email-container {
+            margin: 0 !important;
+            width: 100% !important;
+        }
+        .email-content {
+            padding: 20px !important;
+        }
+        .verification-code h1 {
+            font-size: 28px !important;
+            letter-spacing: 4px !important;
+        }
+    }
+</style>
 </body>
 </html>

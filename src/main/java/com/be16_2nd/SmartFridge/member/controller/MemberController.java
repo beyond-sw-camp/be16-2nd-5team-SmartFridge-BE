@@ -9,11 +9,14 @@ import com.be16_2nd.SmartFridge.member.service.GoogleService;
 import com.be16_2nd.SmartFridge.member.service.KakaoService;
 import com.be16_2nd.SmartFridge.member.service.MemberService;
 import com.be16_2nd.SmartFridge.member.service.NaverService;
+import jakarta.mail.MessagingException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -63,13 +66,10 @@ public class MemberController {
     @GetMapping("/info")
     public ResponseEntity<?> getMemberInfo(@RequestParam String email) {
         try {
-            System.out.println("🔍 Searching for member with email: " + email);
 
             Member member = memberService.findByEmail(email);
 
             if (member != null) {
-                System.out.println("✅ Member found: " + member.getName());
-                System.out.println("📸 Profile image: " + member.getProfileImage());
 
                 return new ResponseEntity<>(
                         CommonDto.builder()
@@ -78,7 +78,6 @@ public class MemberController {
                                 .status_message("사용자 정보 조회 성공")
                                 .build(), HttpStatus.OK);
             } else {
-                System.out.println("❌ Member not found for email: " + email);
                 return new ResponseEntity<>(
                         CommonDto.builder()
                                 .result(null)
@@ -87,7 +86,7 @@ public class MemberController {
                                 .build(), HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            System.err.println("💥 Error occurred: " + e.getMessage());
+            System.err.println("Error occurred: " + e.getMessage());
             e.printStackTrace();
 
             return new ResponseEntity<>(
@@ -216,4 +215,43 @@ public class MemberController {
                                 "그동안 저희 Smart Fridge를 이용해주셔서 감사합니다.")
                         .build(), HttpStatus.OK);
     }
+//    @PostMapping("/member/forgot-password-code")
+//    public ResponseEntity<?> sendPasswordResetCode(@RequestBody ForgotPasswordReqDto dto) throws MessagingException {
+//        memberService.sendResetToken(dto);
+//        return new ResponseEntity<>(
+//                CommonDto.builder()
+//                        .result(true)
+//                        .status_code(HttpStatus.OK.value())
+//                        .status_message("비밀번호 재설정 코드가 이메일로 전송되었습니다.")
+//                        .build(), HttpStatus.OK);
+//    }
+//
+//    public ResponseEntity<?> verifyPasswordResetCode(@RequestBody VerifyPasswordResetCodeReqDto dto) {
+//        try {
+//            String tempToken = memberService.verifyPasswordResetCode(dto.getEmail(), dto.getCode());
+//
+//            return new ResponseEntity<>(
+//                    CommonDto.builder()
+//                            .result(true)
+//                            .status_code(HttpStatus.OK.value())
+//                            .status_message("코드 검증이 완료되었습니다.")
+//                            .data(Map.of("tempToken", tempToken)) // 임시 토큰 반환
+//                            .build(), HttpStatus.OK);
+//
+//        } catch (IllegalArgumentException e) {
+//            return new ResponseEntity<>(
+//                    CommonDto.builder()
+//                            .result(false)
+//                            .status_code(HttpStatus.BAD_REQUEST.value())
+//                            .status_message(e.getMessage())
+//                            .build(), HttpStatus.BAD_REQUEST);
+//        } catch (Exception e) {
+//            return new ResponseEntity<>(
+//                    CommonDto.builder()
+//                            .result(false)
+//                            .status_code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+//                            .status_message("코드 검증 중 오류가 발생했습니다.")
+//                            .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//    }
 }
