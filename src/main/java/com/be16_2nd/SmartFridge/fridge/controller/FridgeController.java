@@ -3,7 +3,7 @@ package com.be16_2nd.SmartFridge.fridge.controller;
 import com.be16_2nd.SmartFridge.common.dto.CommonDto;
 import com.be16_2nd.SmartFridge.fridge.dto.FridgeCreateDto;
 import com.be16_2nd.SmartFridge.fridge.dto.FridgeListDto;
-import com.be16_2nd.SmartFridge.fridge.dto.FridgeMemberResDto;
+import com.be16_2nd.SmartFridge.fridge.dto.FridgeMemberWithRoomIdResDto;
 import com.be16_2nd.SmartFridge.fridge.dto.FridgeUpdateDto;
 import com.be16_2nd.SmartFridge.fridge.service.FridgeService;
 import jakarta.validation.Valid;
@@ -50,7 +50,7 @@ public class FridgeController {
 
     @GetMapping("/{fridgeId}/members")
     public ResponseEntity<?> fridgeMember(@PathVariable Long fridgeId){
-        List<FridgeMemberResDto> members = fridgeService.findByFridgeMember(fridgeId);
+        List<FridgeMemberWithRoomIdResDto> members = fridgeService.findByFridgeMember(fridgeId);
         return new ResponseEntity<>(
                 CommonDto
                         .builder()

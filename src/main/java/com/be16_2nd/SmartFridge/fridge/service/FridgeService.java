@@ -4,9 +4,6 @@ import com.be16_2nd.SmartFridge.Post.repository.PostRepository;
 import com.be16_2nd.SmartFridge.chat.repository.ManagerChatRoomRepository;
 import com.be16_2nd.SmartFridge.common.service.FridgeAccessValidator;
 import com.be16_2nd.SmartFridge.chat.service.ManagerChatRoomLifecycle;
-import com.be16_2nd.SmartFridge.common.service.FridgeAccessValidator;
-import com.be16_2nd.SmartFridge.food.domain.Food;
-import com.be16_2nd.SmartFridge.food.dto.FoodResDto;
 import com.be16_2nd.SmartFridge.food.repository.FoodRepository;
 import com.be16_2nd.SmartFridge.fridge.domain.Fridge;
 import com.be16_2nd.SmartFridge.fridge.domain.FridgeMember;
@@ -25,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -87,15 +85,18 @@ public class FridgeService {
         return fridge.getId();
     }
 
-    public List<FridgeMemberResDto> findByFridgeMember(Long fridgeId){
+    public List<FridgeMemberWithRoomIdResDto> findByFridgeMember(Long fridgeId){
         FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
         Fridge fridge = context.fridge();
         if (context.type() != Type.MANAGER) {
             throw new AccessDeniedException("오직 MANAGER만 멤버 목록을 조회할 수 있습니다.");
         }
-        return fridge.getFridgeMemberList().stream()
-                .map(FridgeMemberResDto::fromEntity)
-                .collect(Collectors.toList());
+        List<FridgeMemberWithRoomIdResDto> fridgeMemberWithRoomIdResDtos = new ArrayList<>();
+        for(FridgeMember fridgeMember : fridge.getFridgeMemberList()){
+            Long roomId = managerChatRoomRepository.findByFridgeAndMember(fridge, fridgeMember.getMember()).orElseThrow(()->new EntityNotFoundException("채팅방이 존재하지 않습니다")).getId();
+            fridgeMemberWithRoomIdResDtos.add(FridgeMemberWithRoomIdResDto.fromEntity(fridgeMember, roomId));
+        }
+        return fridgeMemberWithRoomIdResDtos;
     }
 
     public FridgeListDto fridgeDetail(Long fridgeId) {

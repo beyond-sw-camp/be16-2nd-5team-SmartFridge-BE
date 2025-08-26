@@ -13,20 +13,22 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Data
 @Builder
-public class FridgeMemberResDto {
+public class FridgeMemberWithRoomIdResDto {
     private Long fridgeId;
     private String memberEmail;
     private String memberName;
     private Type type;
+    private Long roomId;
     private LocalDateTime joinedTime;
 
-    public static FridgeMemberResDto fromEntity(FridgeMember fridgeMember){
-        return FridgeMemberResDto.builder()
+    public static FridgeMemberWithRoomIdResDto fromEntity(FridgeMember fridgeMember, Long roomId){
+        return FridgeMemberWithRoomIdResDto.builder()
                 .fridgeId(fridgeMember.getFridge().getId())
                 .memberEmail(fridgeMember.getMember().getEmail())
                 .memberName(fridgeMember.getMember().getName())
                 .type(fridgeMember.getType())
                 .joinedTime(fridgeMember.getCreatedTime())
+                .roomId(roomId)
                 .build();
     }
 }
