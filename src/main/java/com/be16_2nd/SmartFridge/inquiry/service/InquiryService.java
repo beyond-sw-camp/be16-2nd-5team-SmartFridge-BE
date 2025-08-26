@@ -5,6 +5,7 @@ import com.be16_2nd.SmartFridge.inquiry.domain.InquiryImage;
 import com.be16_2nd.SmartFridge.inquiry.dto.InquiryCreateDto;
 import com.be16_2nd.SmartFridge.inquiry.domain.Inquiry;
 import com.be16_2nd.SmartFridge.inquiry.dto.InquiryResDto;
+import com.be16_2nd.SmartFridge.inquiry.dto.InquiryUpdateDto;
 import com.be16_2nd.SmartFridge.inquiry.repository.InquiryRepository;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
@@ -13,11 +14,13 @@ import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
 import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -71,8 +74,18 @@ public class InquiryService {
                 .map(i-> InquiryResDto.fromEntity(i)).collect(Collectors.toList());
     }
 
-    public Long updateInquiry(){
-        return null;
+    public Long updateInquiry(Long inquiryId, InquiryUpdateDto inquiryUpdateDto){
+        Inquiry inquiry = inquiryRepository.findById(inquiryId)
+                .orElseThrow(() -> new RuntimeException("문의 없음"));
+        if (inquiryUpdateDto.getTitle() != null)
+            inquiry.setTitle(inquiryUpdateDto.getTitle());
+        if (inquiryUpdateDto.getContents() != null)
+            inquiry.setContents(inquiryUpdateDto.getContents());
+        if (inquiryUpdateDto.getInquiryType() != null)
+            inquiry.setInquiryType(inquiryUpdateDto.getInquiryType());
+        inquiry.setUpdatedAt(LocalDateTime.now());
+
+        return inquiry.getInquiryId();
     }
 
     public Long deleteInquiry(Long inquiryId){

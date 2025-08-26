@@ -3,6 +3,7 @@ package com.be16_2nd.SmartFridge.inquiry.controller;
 import com.be16_2nd.SmartFridge.common.dto.CommonDto;
 import com.be16_2nd.SmartFridge.inquiry.dto.InquiryCreateDto;
 import com.be16_2nd.SmartFridge.inquiry.dto.InquiryResDto;
+import com.be16_2nd.SmartFridge.inquiry.dto.InquiryUpdateDto;
 import com.be16_2nd.SmartFridge.inquiry.service.InquiryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -61,11 +62,15 @@ public class InquiryController {
     }
 
 //    문의 수정하기
-    @PutMapping("/update")
-    public ResponseEntity<?> updateInquiry(){
+    @PatchMapping("/update/{inquiryId}")
+    public ResponseEntity<?> updateInquiry(@PathVariable Long inquiryId,
+                                           @ModelAttribute InquiryUpdateDto inquiryUpdateDto){
+
+        Long id = inquiryService.updateInquiry(inquiryId, inquiryUpdateDto);
+
         return new ResponseEntity<>(
                 CommonDto.builder()
-                        .result(inquiryService.updateInquiry())
+                        .result(id)
                         .status_code(HttpStatus.OK.value())
                         .status_message("문의 내역 수정 완료")
                         .build(),HttpStatus.OK);
