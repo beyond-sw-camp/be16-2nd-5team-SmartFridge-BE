@@ -141,8 +141,7 @@ public class NotificationService {
         // db 저장
         notificationRepository.save(notification);
 
-
-        Member sender = notification.getSender();
+        Member sender = notification.getSender() == null ? null : notification.getSender();
         Member receiver = notification.getReceiver();
         NotificationSettingType notificationSettingType = notification.getNotificationType().getSettingType();
         boolean isActive = notificationSettingService.isNotificationActive(receiver, notificationSettingType);

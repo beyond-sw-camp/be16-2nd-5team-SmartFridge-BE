@@ -27,7 +27,6 @@ public class FoodExpScheduler  {
     @Transactional
     @Scheduled(cron = "0 0 10 * * *")
     public void notificationForExpFood() {
-
         // 유통기한 당일
         LocalDate today = LocalDate.now();
         // 유통기한 하루 전 (현재 + 1일)
