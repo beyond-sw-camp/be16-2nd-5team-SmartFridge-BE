@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -151,4 +152,32 @@ public class RedisConfig {
     public MessageListenerAdapter chatMessageListenerAdapter(ChatRedisPubSubService chatRedisPubSubService){
         return new MessageListenerAdapter(chatRedisPubSubService, "onMessage");
     }
+
+////    email인증을 위한 redis
+//    @Bean
+//    @Qualifier("emailRedisConnectionFactory")
+//    public RedisConnectionFactory emailRedisConnectionFactory() {
+//        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
+//        configuration.setHostName(host);  // 기존 host 사용
+//        configuration.setPort(port);      // 기존 port 사용
+//        configuration.setDatabase(2);     // email 인증용 DB index
+//        return new LettuceConnectionFactory(configuration);
+//    }
+//
+//
+//    @Bean
+//    @Qualifier("emailRedisTemplate")
+//    public RedisTemplate<String, Object> emailRedisTemplate(
+//            @Qualifier("emailRedisConnectionFactory") RedisConnectionFactory connectionFactory) {
+//
+//        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+//        redisTemplate.setConnectionFactory(connectionFactory);
+//
+//        // Key/Value 직렬화 설정
+//        redisTemplate.setKeySerializer(new StringRedisSerializer());
+//        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+//
+//        return redisTemplate;
+//    }
+
 }

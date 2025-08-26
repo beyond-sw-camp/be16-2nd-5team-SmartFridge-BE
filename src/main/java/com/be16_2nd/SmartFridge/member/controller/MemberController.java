@@ -2,7 +2,6 @@ package com.be16_2nd.SmartFridge.member.controller;
 
 import com.be16_2nd.SmartFridge.common.auth.JwtTokenProvider;
 import com.be16_2nd.SmartFridge.common.dto.CommonDto;
-import com.be16_2nd.SmartFridge.common.dto.CommonErrorDto;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.domain.SocialType;
 import com.be16_2nd.SmartFridge.member.dto.*;
