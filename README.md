@@ -155,20 +155,43 @@
 ## 테스트 결과물
 
 <details>
-  <summary>영관</summary>
-
-  ### ✅ 테스트 1: 로그인 기능
-  - 입력: 아이디/비밀번호
-  - <img width="1883" height="853" alt="Image" src="https://github.com/user-attachments/assets/39c44660-512d-4404-9469-fe3dc1ebab92" />
-  - 기대 결과: 로그인 성공
-  - 실제 결과: ✅ 성공
-  ### ✅ 테스트 2: 회원가입 기능
-  - 입력: 이름, 이메일, 비밀번호
-  - 기대 결과: 회원가입 성공 후 이메일 인증
-  - 실제 결과: ✅ 이메일 인증 완료
-
+<summary><strong>채팅</strong></summary>
+<br>
+  <details>
+  <summary>내 채팅방 목록 조회</summary>
+<img width="1885" height="1004" alt="Image" src="https://github.com/user-attachments/assets/c497dfbf-eef4-4aac-98f0-5fd30c7f4db9" /> 
+</details> 
+  <details>
+  <summary>공동구매채팅방 생성</summary>
+  <img width="1890" height="863" alt="Image" src="https://github.com/user-attachments/assets/f42d1eb1-0769-4bbd-a72d-e33a051cf1fa" />
+<img width="1879" height="845" alt="Image" src="https://github.com/user-attachments/assets/e1b76592-41d0-484f-98a3-9b22bcfc2b01" />
+  </details>
+<details>
+<summary>공동구매채팅방 정보 조회</summary>
+<img width="1892" height="994" alt="Image" src="https://github.com/user-attachments/assets/2794af85-70a6-4479-ad7c-a876a17f0bfd" />
+<img width="1860" height="830" alt="Image" src="https://github.com/user-attachments/assets/92c55367-e4df-4914-be46-b4a262dbd679" />
 </details>
-
+<details>
+<summary>공동구매채팅방 참여</summary>
+<img width="1888" height="1005" alt="Image" src="https://github.com/user-attachments/assets/d7f68304-6e7a-42e9-b50c-8b723dd29369" />
+<img width="1830" height="835" alt="Image" src="https://github.com/user-attachments/assets/d83ef130-b2b3-498c-9ceb-797710403419" />
+<img width="1883" height="844" alt="Image" src="https://github.com/user-attachments/assets/5f18160d-a12e-4559-bdff-35c8faf26bba" />
+</details>
+<details>
+<summary>공동구매채팅방 채팅 메시지 전송</summary>
+- 텍스트
+<img width="1889" height="1015" alt="Image" src="https://github.com/user-attachments/assets/ae3cf813-e5fd-4154-9092-be776442e318" />
+<img width="1900" height="1008" alt="Image" src="https://github.com/user-attachments/assets/2f550b99-9067-4237-a009-e87f36413e0a" />
+<br>
+- 이미지
+<img width="1894" height="849" alt="Image" src="https://github.com/user-attachments/assets/2fcae934-ebc8-4532-97e6-a917a2027343" />
+<img width="1894" height="853" alt="Image" src="https://github.com/user-attachments/assets/0cf168fa-467f-4afc-8c08-e90d030e887e" />
+</details>
+<details>
+<summary>채팅방 나가기</summary>
+<img width="1897" height="1002" alt="Image" src="https://github.com/user-attachments/assets/f1287850-c81e-453d-af4f-cfcf56b41091" />
+</details>
+</details>
 <details>
   <summary>지현</summary>
 
