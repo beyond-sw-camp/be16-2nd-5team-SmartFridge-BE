@@ -1,5 +1,6 @@
 package com.be16_2nd.SmartFridge.member.dto;
 
+import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +21,7 @@ public class NaverProfileDto {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Response{
         private String id;
-        private String nickname;
+        private String name;
         private String email;
         private String profile_image;
     }
