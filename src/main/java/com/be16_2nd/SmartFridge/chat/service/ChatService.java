@@ -218,7 +218,7 @@ public class ChatService {
         return chatListResDtos;
     }
 
-    // 채팅방 내역 조회
+    // 나의 채팅메시지 내역 조회
     public List<ChatMessageDto> getChatHistory(ChatRoomType chatRoomType, Long roomId) {
         Member member = memberRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("존재하지 않은 회원입니다"));
         List<ChatMessage> chatMessages = new ArrayList<>();
@@ -270,6 +270,40 @@ public class ChatService {
         }
         return chatMessageDtos;
     }
+
+    // 관리자가 다른 유저의 채팅방 내역
+    public List<ChatMessageDto> getManagerChatHistory(Long roomId) {
+        Member member = memberRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("존재하지 않은 회원입니다"));
+        List<ChatMessage> chatMessages = new ArrayList<>();
+        ManagerChatRoom managerChatRoom = managerChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
+
+        // 해당 냉장고의 매니저가 아니면 예외 처리
+        if(!fridgeMemberRepository.findByFridgeAndMember(managerChatRoom.getFridge(), member).orElseThrow(()->new EntityNotFoundException("fridge member not found")).getType().equals(Type.MANAGER)){
+            throw new IllegalArgumentException("잘못된 접근입니다.");
+        }
+
+        // 메시지 조회
+        chatMessages = chatMessageRepository.findByManagerChatRoomOrderByCreatedTimeAsc(managerChatRoom);
+        // 메시지를 응답 메시지DTO에 담아 return
+        List<ChatMessageDto> chatMessageDtos = new ArrayList<>();
+        for(ChatMessage chatMessage : chatMessages){
+            List<String> imageUrls = new ArrayList<>();
+            for (ChatMessageImage chatMessageImage : chatMessage.getChatMessageImages()){
+                imageUrls.add(chatMessageImage.getImageUrl());
+            }
+            ChatMessageDto chatMessageDto = ChatMessageDto.builder()
+                    .chatRoomType(chatMessage.getChatRoomType().toString())
+                    .message(chatMessage.getContents())
+                    .imageUrls(imageUrls)
+                    .senderEmail(chatMessage.getSender().getEmail())
+                    .senderName(chatMessage.getSender().getName())
+                    .timestamp(chatMessage.getCreatedTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH시 mm분")))
+                    .build();
+            chatMessageDtos.add(chatMessageDto);
+        }
+        return chatMessageDtos;
+    }
+
     
     // 메시지 읽음 처리
     public void messageRead(Long roomId, ChatRoomType chatRoomType){
