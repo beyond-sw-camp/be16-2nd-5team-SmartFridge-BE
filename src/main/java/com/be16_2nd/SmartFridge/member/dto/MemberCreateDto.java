@@ -31,8 +31,6 @@ public class MemberCreateDto {
                 .password(encodedPassword)
                 .email(this.email)
                 .role(Role.USER)
-//                .socialType()
-//                .profileImage() //nullable 하게 설계해서 oauth인증방식으로 로그인하면 사진 가져오는 형식
                 .build();
     }
 }

@@ -164,7 +164,7 @@ public class MemberController {
         if (originalMember == null){
             originalMember = memberService.createOauth(naverProfileDto.getResponse().getId(),
                     naverProfileDto.getResponse().getEmail(),
-                    naverProfileDto.getResponse().getNickname(),
+                    naverProfileDto.getResponse().getName(),
                     naverProfileDto.getResponse().getProfile_image(),
                     SocialType.NAVER);
         }

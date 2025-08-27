@@ -13,7 +13,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Builder
-@Where(clause = "del_yn='N'")
 @Setter
 public class Member extends BaseTimeEntity {
     @Id
@@ -36,17 +35,6 @@ public class Member extends BaseTimeEntity {
 
     private String socialId;
 
-    @Builder.Default
-    private String delYn = "N";
-
-    @Builder.Default
-    private LocalDateTime withdrawalDate = null;
-
     private String profileImage;
 
-
-    public void delete(Member member){
-        this.delYn = "Y";
-        this.setWithdrawalDate(LocalDateTime.now());
-    }
 }
