@@ -22,8 +22,11 @@ import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -35,6 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -83,7 +87,6 @@ public class PostService {
         }
 
         if (postCategory.getCategory().equals("공지사항")) {
-            // 공지사항 등록 알림 (냉장고 관리자 -> 냉장고 참여자)
             List<FridgeMember> fridgeMemberList = fridgeMemberRepository
                     .findAllByFridgeAndType(fridge, Type.COMMON);
 
@@ -111,22 +114,21 @@ public class PostService {
             throw new AccessDeniedException("수정 권한이 없습니다.");
         }
 
-        List<String> oldImageUrls = post.getImages().stream().map(PostImage::getImageUrl).collect(Collectors.toList());
-        List<String> newImageUrls = updateDto.getImageUrls() != null ? updateDto.getImageUrls() : new ArrayList<>();
+        List<String> newImageUrls = updateDto.getImageUrls() != null ?
+                updateDto.getImageUrls() : new ArrayList<>();
+
+        List<String> oldImageUrls = post.getImages().stream()
+                .map(PostImage::getImageUrl)
+                .collect(Collectors.toList());
 
         oldImageUrls.stream()
                 .filter(url -> !newImageUrls.contains(url))
-                .forEach(url -> {
-                    postImageService.deleteImage(url);
-                    postImageRepository.deleteByPostAndImageUrl(post, url);
-                });
+                .forEach(postImageService::deleteImage);
 
+        post.getImages().clear();
         newImageUrls.stream()
-                .filter(url -> !oldImageUrls.contains(url))
-                .forEach(url -> {
-                    PostImage newPostImage = PostImage.builder().imageUrl(url).post(post).build();
-                    postImageRepository.save(newPostImage);
-                });
+                .map(url -> PostImage.builder().imageUrl(url).post(post).build())
+                .forEach(postImage -> post.getImages().add(postImage));
 
         PostCategory postCategory = postCategoryRepository.findById(updateDto.getCategoryId()).orElseThrow(() -> new EntityNotFoundException("없는 카테고리입니다."));
         post.updatePost(updateDto, postCategory);
@@ -198,9 +200,16 @@ public class PostService {
         };
 
         Specification<Post> finalSpec = fridgeSpec.and(searchSpec);
-
-        Page<Post> postList = postRepository.findAll(finalSpec, pageable);
-        return postList.map(PostResDto::fromEntity);
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdTime") // 정렬 기준 필드 지정
+        );
+        Page<Post> postList = postRepository.findAll(finalSpec, sortedPageable);
+        return postList.map(post -> {
+            Long viewCount = postStatsService.getViewCount(post.getId());
+            return PostResDto.fromEntity(post, viewCount);
+        });
     }
 
     public void addLike(Long fridgeId, Long postId) {

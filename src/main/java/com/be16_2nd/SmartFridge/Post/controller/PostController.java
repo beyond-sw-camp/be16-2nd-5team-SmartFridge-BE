@@ -33,7 +33,7 @@ public class PostController {
     }
 
     @PutMapping("/{postId}/update")
-    public ResponseEntity<?> update(@PathVariable("fridgeId") Long fridgeId, @PathVariable("postId") Long postId, @ModelAttribute PostUpdateDto updateDto) {
+    public ResponseEntity<?> update(@PathVariable("fridgeId") Long fridgeId, @PathVariable("postId") Long postId, @RequestBody PostUpdateDto updateDto) {
         Long updatedPostId = postService.updatePost(fridgeId, postId, updateDto);
         return new ResponseEntity<>(
                 CommonDto.builder()

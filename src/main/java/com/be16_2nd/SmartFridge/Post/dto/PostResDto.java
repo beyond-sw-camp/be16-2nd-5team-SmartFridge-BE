@@ -18,16 +18,16 @@ public class PostResDto {
     private String title;
     private String writer;
     private String categoryName;
-    private int viewCount;
+    private Long viewCount;
     private String timeAgo;
 
-    public static PostResDto fromEntity(Post post) {
+    public static PostResDto fromEntity(Post post,Long viewCount) {
         return PostResDto.builder()
                 .id(post.getId())
                 .title(post.getTitle())
                 .writer(post.getMember().getName())
                 .categoryName(post.getCategory().getCategory())
-                .viewCount(post.getViewCount())
+                .viewCount(viewCount)
                 .timeAgo(calculateTimeAgo(post.getCreatedTime()))
                 .build();
     }
