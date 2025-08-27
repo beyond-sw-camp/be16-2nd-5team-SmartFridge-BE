@@ -77,6 +77,7 @@ public class InquiryService {
     public Long updateInquiry(Long inquiryId, InquiryUpdateDto inquiryUpdateDto){
         Inquiry inquiry = inquiryRepository.findById(inquiryId)
                 .orElseThrow(() -> new RuntimeException("문의 없음"));
+
         if (inquiryUpdateDto.getTitle() != null)
             inquiry.setTitle(inquiryUpdateDto.getTitle());
         if (inquiryUpdateDto.getContents() != null)
@@ -84,6 +85,25 @@ public class InquiryService {
         if (inquiryUpdateDto.getInquiryType() != null)
             inquiry.setInquiryType(inquiryUpdateDto.getInquiryType());
         inquiry.setUpdatedAt(LocalDateTime.now());
+
+        if (inquiry.getInquiryImages() != null && !inquiry.getInquiryImages().isEmpty()) {
+            for (InquiryImage inquiryImage : inquiry.getInquiryImages()) {
+                s3Uploader.delete(inquiryImage.getImageUrl());
+            }
+            inquiry.getInquiryImages().clear();
+        }
+
+        if (inquiryUpdateDto.getImageFiles() != null) {
+            for (MultipartFile newImage : inquiryUpdateDto.getImageFiles()) {
+                String url = s3Uploader.upload(newImage);
+                InquiryImage inquiryImage = InquiryImage.builder()
+                        .imageUrl(url)
+                        .inquiry(inquiry)
+                        .build();
+                inquiry.getInquiryImages().add(inquiryImage);
+            }
+        }
+
 
         return inquiry.getInquiryId();
     }
