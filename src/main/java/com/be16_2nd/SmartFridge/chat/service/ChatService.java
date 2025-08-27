@@ -12,7 +12,9 @@ import com.be16_2nd.SmartFridge.fridge.repository.FridgeMemberRepository;
 import com.be16_2nd.SmartFridge.fridge.repository.FridgeRepository;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
+import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
 import com.be16_2nd.SmartFridge.notification.service.NotificationPublisher;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -167,7 +169,7 @@ public class ChatService {
             // 공동구매 채팅
             receiverEmails = chatMessage.getPurchaseChatRoom().getParticipants().stream()
                     .map(ChatParticipant::getMember)
-                    .map(Member::getEmail)   // Lazy-safe
+                    .map(Member::getEmail)
                     .filter(email -> !email.equals(senderEmail))
                     .toList();
         } else {
@@ -362,23 +364,17 @@ public class ChatService {
 
         // 남은 인원 수 0인 경우 확인
         if(chatRoom.getCurrentParticipants().equals(chatRoom.getMaxParticipants())){
-            // 공동 구매 채팅 참여자에게 발송
-            List<Member> receivers = chatRoom.getParticipants().stream()
-                    .map(ChatParticipant::getMember).toList();
 
-            // 공동 구매 채팅방 개설자에게만 발송하는 경우
-//            Member receiver = chatRoom.getCreator();
+            // 공동 구매 채팅방 개설자에게만 발송
+            Member receiver = chatRoom.getCreator();
 
-            // 발신자는 여기서 의미 없으므로 null 또는 시스템 알림 계정
-            for(Member receiver : receivers){
-                notificationPublisher.publish(
-                        0L
-                        , null  // 발신자 표시 (예: 시스템)
-                        , receiver.getEmail()
-                        , "공동 구매 채팅방이 가득 찼습니다"
-                        , "ROOM_FULL"
-                );
-            }
+            notificationPublisher.publish(
+                    chatRoom.getFridge().getId()
+                    , null  // 발신자 표시 (예: 시스템)
+                    , receiver.getEmail()
+                    , "공동 구매 채팅방이 가득 찼습니다"
+                    , "ROOM_FULL"
+            );
         }
     }
 
