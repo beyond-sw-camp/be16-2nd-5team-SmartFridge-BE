@@ -112,8 +112,7 @@ public class MemberService {
     }
 
     public Member updatePw(UpdatePwDto updatePwDto){
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Member member = memberRepository.findByEmail(email)
+        Member member = memberRepository.findByEmail(updatePwDto.getEmail())
                 .orElseThrow(()->new EntityNotFoundException("가입되지 않은 이메일입니다."));
         String password = updatePwDto.getNewPassword();
         String passwordConfirm = updatePwDto.getNewPasswordConfirm();

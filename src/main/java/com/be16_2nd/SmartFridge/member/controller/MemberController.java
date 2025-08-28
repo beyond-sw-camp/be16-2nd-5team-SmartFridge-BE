@@ -251,7 +251,7 @@ public class MemberController {
         }
     }
 
-    @PutMapping("/updatepw")
+    @PutMapping("/forgot-password/updatepw")
     public ResponseEntity<?> updatePw(@RequestBody UpdatePwDto updatePwDto){
         return new ResponseEntity<>(
                 CommonDto.builder()
