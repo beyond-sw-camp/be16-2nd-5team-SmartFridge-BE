@@ -38,7 +38,7 @@ public class StompController {
         ChatMessageEmailDto result = chatService.saveMessageWithEmails(chatMessage);
 
         notificationPublisher.publish(
-                0L,
+                chatMessage.getPurchaseChatRoom().getFridge().getId(),
                 result.senderEmail(),
                 result.receiverEmailList().get(0),
                 "새 메시지가 도착했습니다",
