@@ -2,6 +2,8 @@ package com.be16_2nd.SmartFridge.member.controller;
 
 import com.be16_2nd.SmartFridge.common.auth.JwtTokenProvider;
 import com.be16_2nd.SmartFridge.common.dto.CommonDto;
+import com.be16_2nd.SmartFridge.email.dto.EmailDto;
+import com.be16_2nd.SmartFridge.email.service.EmailService;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.domain.SocialType;
 import com.be16_2nd.SmartFridge.member.dto.*;
@@ -10,13 +12,11 @@ import com.be16_2nd.SmartFridge.member.service.KakaoService;
 import com.be16_2nd.SmartFridge.member.service.MemberService;
 import com.be16_2nd.SmartFridge.member.service.NaverService;
 import jakarta.mail.MessagingException;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -33,6 +33,7 @@ public class MemberController {
     private final GoogleService googleService;
     private final KakaoService kakaoService;
     private final NaverService naverService;
+    private final EmailService emailService;
 
     @PostMapping("/create")
     public ResponseEntity<?> save(@RequestBody @Valid MemberCreateDto memberCreateDto){
@@ -215,43 +216,48 @@ public class MemberController {
                                 "그동안 저희 Smart Fridge를 이용해주셔서 감사합니다.")
                         .build(), HttpStatus.OK);
     }
-//    @PostMapping("/member/forgot-password-code")
-//    public ResponseEntity<?> sendPasswordResetCode(@RequestBody ForgotPasswordReqDto dto) throws MessagingException {
-//        memberService.sendResetToken(dto);
-//        return new ResponseEntity<>(
-//                CommonDto.builder()
-//                        .result(true)
-//                        .status_code(HttpStatus.OK.value())
-//                        .status_message("비밀번호 재설정 코드가 이메일로 전송되었습니다.")
-//                        .build(), HttpStatus.OK);
-//    }
-//
-//    public ResponseEntity<?> verifyPasswordResetCode(@RequestBody VerifyPasswordResetCodeReqDto dto) {
-//        try {
-//            String tempToken = memberService.verifyPasswordResetCode(dto.getEmail(), dto.getCode());
-//
-//            return new ResponseEntity<>(
-//                    CommonDto.builder()
-//                            .result(true)
-//                            .status_code(HttpStatus.OK.value())
-//                            .status_message("코드 검증이 완료되었습니다.")
-//                            .data(Map.of("tempToken", tempToken)) // 임시 토큰 반환
-//                            .build(), HttpStatus.OK);
-//
-//        } catch (IllegalArgumentException e) {
-//            return new ResponseEntity<>(
-//                    CommonDto.builder()
-//                            .result(false)
-//                            .status_code(HttpStatus.BAD_REQUEST.value())
-//                            .status_message(e.getMessage())
-//                            .build(), HttpStatus.BAD_REQUEST);
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(
-//                    CommonDto.builder()
-//                            .result(false)
-//                            .status_code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-//                            .status_message("코드 검증 중 오류가 발생했습니다.")
-//                            .build(), HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
+
+//    비밀번호 재설정 이메일 전송
+    @PostMapping("/forgot-password/send-code")
+    public ResponseEntity<?> mailSend(@RequestBody EmailDto emailDto) throws MessagingException {
+        emailService.sendEmail(emailDto.getMail());
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result("OK")
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("인증코드가 발송되었습니다.")
+                        .build(),HttpStatus.OK);
+    }
+
+//    비밀번호 재설정 이메일 검증
+    @PostMapping("/forgot-password/verify-code")
+    public ResponseEntity<?> verify(@RequestBody EmailDto emailDto) {
+
+        boolean isVerify = emailService.verifyEmailCode(emailDto.getMail(), emailDto.getVerifyCode());
+        if (isVerify){
+            return new ResponseEntity<>(
+                    CommonDto.builder()
+                            .result("VERIFIED")
+                            .status_code(HttpStatus.OK.value())
+                            .status_message("이메일 인증이 완료되었습니다.")
+                            .build(),HttpStatus.OK);
+        }else {
+            return new ResponseEntity<>(
+                    CommonDto.builder()
+                            .result("UNVERIFIED")
+                            .status_code(HttpStatus.BAD_REQUEST.value())
+                            .status_message("이메일 인증 실패하셨습니다.")
+                            .build(),HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PutMapping("/updatepw")
+    public ResponseEntity<?> updatePw(@RequestBody UpdatePwDto updatePwDto){
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(memberService.updatePw(updatePwDto))
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("비밀번호가 성공적으로 변경되었습니다.")
+                        .build(),HttpStatus.OK);
+    }
 }
