@@ -16,5 +16,11 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     Page<Notification> findAll(Specification<Notification> specification, Pageable pageable);
 
-    long countByReceiverAndNotificationTypeInAndIsReadFalse(Member member, List<NotificationType> notificationTypes);
+    Long countByReceiverAndNotificationTypeInAndIsReadFalse(Member member, List<NotificationType> notificationTypes);
+
+    List<Notification> findTop5ByReceiverAndFridgeIdAndIsReadFalseAndNotificationTypeInOrderByCreatedTimeDesc(
+            Member receiver,
+            Long fridgeId,
+            List<NotificationType> notificationTypes
+    );
 }
