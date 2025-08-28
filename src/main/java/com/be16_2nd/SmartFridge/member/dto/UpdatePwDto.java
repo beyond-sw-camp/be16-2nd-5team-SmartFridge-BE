@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdatePwDto {
+    private String email;
     private String newPassword;
     private String newPasswordConfirm;
 }
