@@ -72,7 +72,6 @@ public class NotificationController {
     public ResponseEntity<?> getBadgeNotification(@PathVariable Long fridgeId) {
         Member receiver = memberService.getCurrentMember();
         List<NotificationBadgeResDto> notificationBadgeResDtoList = notificationService.getNotificationList(fridgeId, receiver);
-        log.error("알림 배지 목록 조회 : {}", notificationBadgeResDtoList);
         return new ResponseEntity<>(CommonDto.builder()
                 .result(notificationBadgeResDtoList)
                 .status_code(HttpStatus.OK.value())
