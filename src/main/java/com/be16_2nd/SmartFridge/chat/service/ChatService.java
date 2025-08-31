@@ -404,7 +404,6 @@ public class ChatService {
 
             notificationPublisher.publish(
                     chatRoom.getFridge().getId()
-                    , null  // 발신자 표시 (예: 시스템)
                     , receiver.getEmail()
                     , "공동 구매 채팅방이 가득 찼습니다"
                     , "ROOM_FULL"
