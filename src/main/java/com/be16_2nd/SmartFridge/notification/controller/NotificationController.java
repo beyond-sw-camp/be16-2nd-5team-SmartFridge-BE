@@ -32,10 +32,8 @@ public class NotificationController {
     // 사용자 별 알림 목록 조회
     @GetMapping("/list")
     public ResponseEntity<?> notificationList(@PathVariable Long fridgeId,
-                                              @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
-                                              @RequestParam(required = false) NotificationType notificationType) {
-        Page<NotificationResDto> notificationResDtoPage = notificationService.findNotificationList(fridgeId
-                                                                        , notificationType, pageable);
+                                              @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<NotificationResDto> notificationResDtoPage = notificationService.findNotificationList(fridgeId, pageable);
         return new ResponseEntity<>(CommonDto.builder()
                 .result(notificationResDtoPage)
                 .status_code(HttpStatus.OK.value())
