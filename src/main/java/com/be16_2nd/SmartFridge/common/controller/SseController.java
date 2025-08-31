@@ -10,9 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -45,7 +42,6 @@ public class SseController {
 
         } catch (IOException e) {
             // 최초 연결 시 전송 실패
-            log.error("SSE 초기 연결 실패: {}", email, e);
             sseEmitter.complete();
         }
 
