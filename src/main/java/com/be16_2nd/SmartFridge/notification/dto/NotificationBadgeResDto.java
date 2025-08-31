@@ -29,6 +29,8 @@ public class NotificationBadgeResDto {
                 .content(notification.getContent())
                 .isRead(notification.isRead())
                 .type(notification.getNotificationType())
+                .targetType(notification.getTargetType())
+                .targetId(notification.getTargetId())
                 .createdAt(notification.getCreatedTime())
                 .build();
     }
