@@ -24,7 +24,6 @@ public class InquiryCommentService {
 
     private final InquiryCommentRepository inquiryCommentRepository;
     private final InquiryRepository inquiryRepository;
-    private final NotificationPublisher notificationPublisher;
     private final MemberRepository memberRepository;
     private final NotificationService notificationService;
 
