@@ -12,6 +12,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.UUID;
+
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
     Page<Post> findAll(Specification<Post> specification, Pageable pageable);
@@ -19,4 +22,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :id")
     void incrementViewCount(@Param("id") Long id);
     void deleteAllByFridgeAndMember(Fridge fridge, Member member);
+
+    List<Post> findAllByMemberId(UUID id);
+
+    Long countByMemberId(UUID memberId);
 }

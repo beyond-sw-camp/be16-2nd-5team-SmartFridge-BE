@@ -17,4 +17,19 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     Page<Notification> findAll(Specification<Notification> specification, Pageable pageable);
 
     long countByReceiverAndNotificationTypeInAndIsReadFalse(Member member, List<NotificationType> notificationTypes);
+
+    // Admin 알림 조회를 위한 새로운 메서드들
+
+    // Admin의 안읽은 알림 조회 (최신순 정렬)
+    List<Notification> findByReceiverAndIsReadFalseOrderByCreatedTimeDesc(Member receiver);
+
+    // Admin의 읽은 알림 조회 (최신순 정렬)
+    List<Notification> findByReceiverAndIsReadTrueOrderByCreatedTimeDesc(Member receiver);
+
+    // Admin의 모든 알림 조회 (읽음 상태별 정렬)
+    List<Notification> findByReceiverOrderByIsReadAscCreatedTimeDesc(Member receiver);
+
+    // Admin의 안읽은 알림 개수 조회
+    long countByReceiverAndIsReadFalse(Member receiver);
+
 }

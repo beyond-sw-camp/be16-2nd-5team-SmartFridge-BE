@@ -27,6 +27,7 @@ public class InquiryCreateDto {
                 .inquiryType(inquiryType)
                 .title(title)
                 .contents(contents)
+                .inquiryImages(new ArrayList<>())
                 .member(member)
                 .build();
     }

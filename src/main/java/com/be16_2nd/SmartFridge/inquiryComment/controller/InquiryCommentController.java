@@ -18,24 +18,13 @@ public class InquiryCommentController {
 
     private final InquiryCommentService inquiryCommentService;
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/create")
-    public ResponseEntity<?> create(@RequestParam Long inquiryId
-            , @RequestBody InquiryCommentCreateDto inquiryCommentCreateDto){
-        return new ResponseEntity<>(CommonDto.builder()
-                .result(inquiryCommentService.create(inquiryCommentCreateDto, inquiryId))
-                .status_code(HttpStatus.CREATED.value())
-                .status_message("답변 등록 완료").build(), HttpStatus.CREATED);
-    }
-
-    @Transactional(readOnly = true)
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> findAll(){
-        return null;
-    }
-
     @Transactional(readOnly = true)
     public ResponseEntity<?> myInquiryComment(){
-        return null;
+        return new ResponseEntity(
+                CommonDto.builder()
+                        .result(inquiryCommentService.findMyInquiryComment())
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("문의 답변내역 조회 성공")
+                        .build(),HttpStatus.OK);
     }
 }

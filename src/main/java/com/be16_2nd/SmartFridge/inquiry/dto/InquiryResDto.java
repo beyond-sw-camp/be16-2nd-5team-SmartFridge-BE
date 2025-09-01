@@ -1,6 +1,7 @@
 package com.be16_2nd.SmartFridge.inquiry.dto;
 
 import com.be16_2nd.SmartFridge.inquiry.domain.Inquiry;
+import com.be16_2nd.SmartFridge.inquiry.domain.InquiryImage;
 import com.be16_2nd.SmartFridge.inquiry.domain.InquiryStatus;
 import com.be16_2nd.SmartFridge.inquiry.domain.InquiryType;
 import com.be16_2nd.SmartFridge.inquiryComment.dto.InquiryCommentResDto;
@@ -11,7 +12,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Data
@@ -23,8 +23,7 @@ public class InquiryResDto {
     private InquiryType inquiryType;
     private String title;
     private String contents;
-    private UUID memberId;
-    private Long fridgeId;
+    private String memberEmail;
     private List<String> imageUrls;
     private InquiryStatus status; // 상태 추가
     private List<InquiryCommentResDto> comments;
@@ -36,7 +35,10 @@ public class InquiryResDto {
                 .inquiryType(inquiry.getInquiryType())
                 .title(inquiry.getTitle())
                 .contents(inquiry.getContents())
-                .memberId(inquiry.getMember().getId())
+                .memberEmail(inquiry.getMember().getEmail())
+                .imageUrls(inquiry.getInquiryImages().stream()
+                        .map(InquiryImage::getImageUrl)
+                        .collect(Collectors.toList()))
                 .status(inquiry.getStatus()) // 상태
                 .comments(inquiry.getComments().stream()
                                 .map(InquiryCommentResDto::new)

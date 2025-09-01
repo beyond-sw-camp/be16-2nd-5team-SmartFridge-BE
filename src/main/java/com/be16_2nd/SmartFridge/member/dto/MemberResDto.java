@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -16,12 +18,18 @@ public class MemberResDto {
     private UUID id;
     private String name;
     private String email;
+    private String profileImage;
+    private LocalDateTime createdTime;
+    private LocalDateTime lastLoginTime;
 
     public static MemberResDto fromEntity(Member member){
         return MemberResDto.builder()
                 .id(member.getId())
                 .name(member.getName())
                 .email(member.getEmail())
+                .profileImage(member.getProfileImage())
+                .createdTime(member.getCreatedTime())
+                .lastLoginTime(member.getLastLoginTime())
                 .build();
     }
 }

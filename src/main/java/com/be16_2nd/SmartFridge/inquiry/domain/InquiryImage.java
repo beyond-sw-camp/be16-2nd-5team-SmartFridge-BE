@@ -21,6 +21,4 @@ public class InquiryImage {
     @JoinColumn(name = "inquiry_id", nullable = false)
     private Inquiry inquiry;
 
-
-
 }

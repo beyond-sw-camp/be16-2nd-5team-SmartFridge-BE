@@ -43,28 +43,24 @@ public class InquiryService {
                 .orElseThrow(()-> new EntityNotFoundException("등록되지 않은 사용자입니다."));
         Member receiver = memberRepository.findByEmail("admin@naver.com")
                 .orElseThrow(() -> new EntityNotFoundException("등록되지 않은 관리자입니다."));
-        Inquiry inquiry = inquiryRepository.save(inquiryCreateDto.toEntity(sender));
+
+        Inquiry inquiry = inquiryCreateDto.toEntity(sender);
+
         for (MultipartFile image : inquiryCreateDto.getImageFiles()){
             String url = s3Uploader.upload(image);
-            System.out.println("url : " + url);
             InquiryImage inquiryImage = InquiryImage.builder()
                     .imageUrl(url)
                     .inquiry(inquiry)
                     .build();
             inquiry.getInquiryImages().add(inquiryImage);
         }
-
+        inquiryRepository.save(inquiry);
         // 알림 발송 + db 저장
         notificationService.create(sender, receiver, NotificationType.NEW_INQUIRY, inquiry);
 
         return inquiry.getInquiryId();
     }
 
-    @Transactional(readOnly = true)
-    public List<InquiryResDto> findAll(){
-        return inquiryRepository.findAll().stream()
-                .map(i-> InquiryResDto.fromEntity(i)).collect(Collectors.toList());
-    }
 
     @Transactional(readOnly = true)
     public List<InquiryResDto> findMyInquiry(){

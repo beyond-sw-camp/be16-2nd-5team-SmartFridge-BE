@@ -21,7 +21,7 @@ public class S3Uploader {
     private String bucket;
 
     public String upload(MultipartFile file) {
-        String key = "products/" + UUID.randomUUID() + "-" + file.getOriginalFilename();
+        String key = file.getOriginalFilename();
 
         try {
             PutObjectRequest request = PutObjectRequest.builder()
@@ -42,7 +42,6 @@ public class S3Uploader {
     // 삭제 메서드
     public void delete(String fileUrl) {
         try {
-            // URL에서 key 추출 (예: https://bucket-name.s3.amazonaws.com/products/UUID-파일명.jpg)
             String key = extractKeyFromUrl(fileUrl);
 
             DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()

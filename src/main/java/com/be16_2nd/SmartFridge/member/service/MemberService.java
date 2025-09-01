@@ -1,23 +1,23 @@
 package com.be16_2nd.SmartFridge.member.service;
 
-import com.be16_2nd.SmartFridge.common.service.RedisUtil;
-import com.be16_2nd.SmartFridge.email.dto.EmailDto;
-import com.be16_2nd.SmartFridge.email.service.EmailService;
+import com.be16_2nd.SmartFridge.Post.domain.Post;
+import com.be16_2nd.SmartFridge.Post.repository.PostCommentRepository;
+import com.be16_2nd.SmartFridge.Post.repository.PostLikeRepository;
+import com.be16_2nd.SmartFridge.Post.repository.PostRepository;
+import com.be16_2nd.SmartFridge.common.service.S3Uploader;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.domain.SocialType;
 import com.be16_2nd.SmartFridge.member.dto.*;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
-import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,9 +31,10 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService;
-    private final RedisUtil redisUtil;
-
+    private final S3Uploader s3Uploader;
+    private final PostRepository postRepository;
+    private final PostLikeRepository postLikeRepository;
+    private final PostCommentRepository postCommentRepository;
 
     public Member save(MemberCreateDto memberCreateDto){
         if (memberRepository.findByEmail(memberCreateDto.getEmail()).isPresent()){
@@ -64,10 +65,6 @@ public class MemberService {
         }
         return optionalMember.get();
     }
-    public Member findByEmail(String email) {
-        return memberRepository.findByEmail(email)
-                .orElse(null);
-    }
 
     public Member getMemberBySocialId(String socialId){
         Member member = memberRepository.findBySocialId(socialId).orElse(null);
@@ -87,15 +84,10 @@ public class MemberService {
     }
 
     @Transactional(readOnly = true)
-    public List<MemberResDto> findAll(){
-        return memberRepository.findAll().stream()
-                .map(m->MemberResDto.fromEntity(m)).collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
     public MemberResDto myInfo(){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Member member = memberRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("member is not found"));
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(()->new EntityNotFoundException("member is not found"));
         return MemberResDto.fromEntity(member);
     }
 
@@ -125,5 +117,54 @@ public class MemberService {
         member.updatePw(passwordEncoder.encode(password));
         memberRepository.save(member);
         return member;
+    }
+
+    public List<MyPostResDto> myposts(){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(()->new EntityNotFoundException("회원을 찾을 수 없습니다."));
+
+        List<Post> memberPost = postRepository.findAllByMemberId(member.getId());
+
+        return memberPost.stream()
+                .map(post -> MyPostResDto.fromEntity(post, Long.valueOf(post.getViewCount())))
+                .collect(Collectors.toList());
+    }
+
+    public MyStatsDto mystats(){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(()->new EntityNotFoundException("회원을 찾을 수 없습니다."));
+
+        Long postCount = postRepository.countByMemberId(member.getId());
+        Long commentCount = postCommentRepository.countByMemberId(member.getId());
+        Long likeCount = postLikeRepository.countByPostMemberId(member.getId());
+
+        return MyStatsDto.builder()
+                .postCount(postCount)
+                .commentCount(commentCount)
+                .likeCount(likeCount)
+                .build();
+    }
+    public MemberResDto updateName(UpdateNameDto updateNameDto){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(()->new EntityNotFoundException("회원을 찾을 수 없습니다."));
+        member.updateName(updateNameDto.getName());
+        memberRepository.save(member);
+        return MemberResDto.fromEntity(member);
+    }
+
+    public MemberResDto updateMyProfileImage(UpdateProfielImageDto updateProfielImageDto) throws IOException {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(()->new EntityNotFoundException("회원을 찾을 수 없습니다."));
+
+        String profileImageUrl = s3Uploader.upload(updateProfielImageDto.getNewProfileImage());
+
+        member.updateProfileImage(profileImageUrl);
+
+        memberRepository.save(member);
+        return MemberResDto.fromEntity(member);
     }
 }

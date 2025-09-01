@@ -19,10 +19,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -55,6 +56,7 @@ public class MemberController {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+        member.setLastLoginTime(LocalDateTime.now());
 
         return new ResponseEntity<>(
                 CommonDto.builder()
@@ -65,38 +67,13 @@ public class MemberController {
     }
 
     @GetMapping("/info")
-    public ResponseEntity<?> getMemberInfo(@RequestParam String email) {
-        try {
-
-            Member member = memberService.findByEmail(email);
-
-            if (member != null) {
-
-                return new ResponseEntity<>(
-                        CommonDto.builder()
-                                .result(member)
-                                .status_code(HttpStatus.OK.value())
-                                .status_message("사용자 정보 조회 성공")
-                                .build(), HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(
-                        CommonDto.builder()
-                                .result(null)
-                                .status_code(HttpStatus.NOT_FOUND.value())
-                                .status_message("사용자를 찾을 수 없습니다.")
-                                .build(), HttpStatus.NOT_FOUND);
-            }
-        } catch (Exception e) {
-            System.err.println("Error occurred: " + e.getMessage());
-            e.printStackTrace();
-
-            return new ResponseEntity<>(
-                    CommonDto.builder()
-                            .result(null)
-                            .status_code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .status_message("사용자 정보 조회 중 오류가 발생했습니다: " + e.getMessage())
-                            .build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<?> getMemberInfo() {
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(memberService.myInfo())
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("사용자 정보 조회 성공")
+                        .build(), HttpStatus.OK);
     }
 //    google로그인 메서드
     @PostMapping("/google/doLogin")
@@ -121,6 +98,7 @@ public class MemberController {
         Map<String, Object> loginInfo = new HashMap<>();
         loginInfo.put("id", originalMember.getId());
         loginInfo.put("token", jwtToken);
+        originalMember.setLastLoginTime(LocalDateTime.now());
         return new ResponseEntity<>(
                 CommonDto.builder()
                         .result(loginInfo)
@@ -148,6 +126,7 @@ public class MemberController {
         Map<String, Object> loginInfo = new HashMap<>();
         loginInfo.put("id", originalMember.getId());
         loginInfo.put("token", jwtToken);
+        originalMember.setLastLoginTime(LocalDateTime.now());
         return new ResponseEntity<>(
                 CommonDto.builder()
                         .result(loginInfo)
@@ -175,24 +154,13 @@ public class MemberController {
         Map<String, Object> loginInfo = new HashMap<>();
         loginInfo.put("id", originalMember.getId());
         loginInfo.put("token", jwtToken);
+        originalMember.setLastLoginTime(LocalDateTime.now());
         return new ResponseEntity<>(
                 CommonDto.builder()
                         .result(loginInfo)
                         .status_code(HttpStatus.OK.value())
                         .status_message("네이버 로그인 성공")
                         .build(), HttpStatus.OK);
-    }
-
-    @GetMapping("/list")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> findAll(){
-        List<MemberResDto> memberResDtoList = memberService.findAll();
-        return new ResponseEntity<>(
-                CommonDto.builder()
-                        .result(memberResDtoList)
-                        .status_code(HttpStatus.OK.value())
-                        .status_message("회원목록 조회 완료")
-                        .build(),HttpStatus.OK);
     }
 
     @GetMapping("/myinfo")
@@ -259,5 +227,68 @@ public class MemberController {
                         .status_code(HttpStatus.OK.value())
                         .status_message("비밀번호가 성공적으로 변경되었습니다.")
                         .build(),HttpStatus.OK);
+    }
+
+    @GetMapping("/myposts")
+    public ResponseEntity<?> myposts(){
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(memberService.myposts())
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("내 게시 목록 조회 성공")
+                        .build(),HttpStatus.OK);
+    }
+
+    @GetMapping("/mystats")
+    public ResponseEntity<?> mystats(){
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(memberService.mystats())
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("내 활동 통계 조회 성공")
+                        .build(),HttpStatus.OK);
+    }
+
+    @PutMapping("/update/name")
+    public ResponseEntity<?> updateMyName(@RequestBody UpdateNameDto updateNameDto){
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(memberService.updateName(updateNameDto))
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("이름이 변경되었습니다.")
+                        .build(),HttpStatus.OK);
+    }
+
+    @PutMapping("/update/profileimage")
+    public ResponseEntity<?> updateMyProfileImage(@ModelAttribute UpdateProfielImageDto updateProfielImageDto) throws IOException {
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(memberService.updateMyProfileImage(updateProfielImageDto))
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("프로필 이미지가 변경되었습니다.")
+                        .build(),HttpStatus.OK);
+    }
+
+    // RT를 통한 AT 갱신 요청
+    @PostMapping("/refresh-at")
+    public ResponseEntity<?> generateNewAt(@RequestBody @Valid RefreshTokenDto refreshTokenDto){
+        // RT 검증 로직
+        Member member = jwtTokenProvider.validateRt(refreshTokenDto.getRefreshToken());
+
+        // AT 신규 생성 로직
+        String accessToken = jwtTokenProvider.createAtToken(member);
+
+        LoginResDto loginResDto = LoginResDto.builder()
+                .accessToken(accessToken)
+                .build();
+
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(loginResDto)
+                        .status_code(
+                                HttpStatus.OK.value())
+                        .status_message("accessToken 재발급 성공!")
+                        .build(),
+                HttpStatus.OK);
     }
 }

@@ -37,18 +37,6 @@ public class InquiryController {
                 .status_message("문의 등록 완료").build(), HttpStatus.CREATED);
     }
 
-    @Transactional(readOnly = true)
-//    admin의 전체 문의 내역 조회
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/list")
-    public ResponseEntity<?> findAll(){
-        return new ResponseEntity<>(
-                CommonDto.builder()
-                        .result(inquiryService.findAll())
-                        .status_code(HttpStatus.OK.value())
-                        .status_message("문의내역 전체조회 완료")
-                        .build(),HttpStatus.OK);
-    }
 
 //    내 문의 내역 조회
     @GetMapping("/myInquiry")

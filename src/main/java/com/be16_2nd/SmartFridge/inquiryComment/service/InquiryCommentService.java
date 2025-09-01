@@ -14,6 +14,7 @@ import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
 import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,19 +29,11 @@ public class InquiryCommentService {
     private final MemberRepository memberRepository;
     private final NotificationService notificationService;
 
-    public InquiryCommentResDto create(InquiryCommentCreateDto inquiryCommentCreateDto, Long inquiryId) {
-        Inquiry inquiry = inquiryRepository.findById(inquiryId)
-                .orElseThrow(() -> new EntityNotFoundException("등록되지 않은 문의입니다."));
-        Member sender = memberRepository.findByEmail("admin@naver.com")
-                .orElseThrow(() -> new EntityNotFoundException("등록되지 않은 관리자입니다."));
-        String email = inquiry.getMember().getEmail();
-        Member receiver = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("등록되지 않은 회원입니다."));
-        InquiryComment inquiryComment = inquiryCommentRepository.save(inquiryCommentCreateDto.toEntity(inquiryCommentCreateDto, inquiry));
-        inquiry.setStatus(InquiryStatus.COMPLETED);
+    public InquiryCommentResDto findMyInquiryComment(){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(()->new EntityNotFoundException("가입되지 않은 회원입니다."));
 
-        // 알림 발송 + db 저장
-        notificationService.create(sender, receiver, NotificationType.ADMIN_REPLY, inquiryComment);
-        return new InquiryCommentResDto(inquiryComment);
+        return null;
     }
 }
