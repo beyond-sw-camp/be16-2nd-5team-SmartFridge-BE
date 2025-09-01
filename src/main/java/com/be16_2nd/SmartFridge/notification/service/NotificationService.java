@@ -15,6 +15,7 @@ import com.be16_2nd.SmartFridge.notification.domain.Notification;
 import com.be16_2nd.SmartFridge.notification.domain.NotificationSettingType;
 import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
 import com.be16_2nd.SmartFridge.notification.domain.TargetType;
+import com.be16_2nd.SmartFridge.notification.dto.NotificationBadgeResDto;
 import com.be16_2nd.SmartFridge.notification.dto.NotificationReadReqDto;
 import com.be16_2nd.SmartFridge.notification.dto.NotificationResDto;
 import com.be16_2nd.SmartFridge.notification.repository.NotificationRepository;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -181,14 +183,14 @@ public class NotificationService {
     }
 
     // 문의 알림 count
-    public long countUnreadInquiries(Member member) {
+    public Long countUnreadInquiries(Member member) {
         return notificationRepository.countByReceiverAndNotificationTypeInAndIsReadFalse(
                 member, NotificationType.inquiryTypes()
         );
     }
 
     // 채팅 알림 count
-    public long countUnreadChats(Member member) {
+    public Long countUnreadChats(Member member) {
         return notificationRepository.countByReceiverAndNotificationTypeInAndIsReadFalse(
                 member, NotificationType.chatTypes()
         );
@@ -214,5 +216,21 @@ public class NotificationService {
                 notification.setRead(true);
             }
         }
+    }
+
+    // 알림 배지에 표시할 최신 5개 알림
+    public List<NotificationBadgeResDto> getNotificationList(Long fridgeId, Member receiver) {
+        List<NotificationType> notificationTypeList = NotificationType.visibleInNotificationList();
+
+        List<Notification> notifications = notificationRepository
+                .findTop5ByReceiverAndFridgeIdAndIsReadFalseAndNotificationTypeInOrderByCreatedTimeDesc(
+                        receiver
+                        , fridgeId
+                        , notificationTypeList
+                );
+
+        return notifications.stream()
+                .map(NotificationBadgeResDto::fromEntity)
+                .collect(Collectors.toList());
     }
 }

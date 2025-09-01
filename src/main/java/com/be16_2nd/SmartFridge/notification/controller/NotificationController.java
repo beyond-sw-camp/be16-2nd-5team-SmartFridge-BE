@@ -1,10 +1,10 @@
 package com.be16_2nd.SmartFridge.notification.controller;
 
 import com.be16_2nd.SmartFridge.common.dto.CommonDto;
-import com.be16_2nd.SmartFridge.common.service.FridgeAccessValidator;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.service.MemberService;
 import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
+import com.be16_2nd.SmartFridge.notification.dto.NotificationBadgeResDto;
 import com.be16_2nd.SmartFridge.notification.dto.NotificationReadReqDto;
 import com.be16_2nd.SmartFridge.notification.dto.NotificationResDto;
 import com.be16_2nd.SmartFridge.notification.service.NotificationService;
@@ -16,11 +16,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -64,6 +62,18 @@ public class NotificationController {
         notificationService.readNotification(notificationReadReqDtoList);
         return new ResponseEntity<>(CommonDto.builder()
                 .result(null)
+                .status_code(HttpStatus.OK.value())
+                .status_message("알림 읽음 처리 성공")
+                .build()
+                , HttpStatus.OK);
+    }
+
+    @GetMapping("/badgeNotification")
+    public ResponseEntity<?> getBadgeNotification(@PathVariable Long fridgeId) {
+        Member receiver = memberService.getCurrentMember();
+        List<NotificationBadgeResDto> notificationBadgeResDtoList = notificationService.getNotificationList(fridgeId, receiver);
+        return new ResponseEntity<>(CommonDto.builder()
+                .result(notificationBadgeResDtoList)
                 .status_code(HttpStatus.OK.value())
                 .status_message("알림 읽음 처리 성공")
                 .build()

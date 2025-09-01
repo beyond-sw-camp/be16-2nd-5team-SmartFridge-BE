@@ -35,22 +35,6 @@ public class SseController {
 //        // 레지스트리에 추가
         sseEmitterRegistry.addSseEmitter(email, sseEmitter);
         log.info("현재 registry 상태: {}", sseEmitterRegistry.getAllKeys());
-//
-//        // 연결 종료 처리: 클라이언트 끊기, 타임아웃, 에러 발생 시
-//        sseEmitter.onCompletion(() -> {
-//            log.info("SSE 연결 완료, 레지스트리에서 제거: {}", email);
-//            sseEmitterRegistry.removeEmitter(email);
-//        });
-//        sseEmitter.onTimeout(() -> {
-//            log.info("SSE 연결 타임아웃, 레지스트리에서 제거: {}", email);
-//            sseEmitterRegistry.removeEmitter(email);
-//            sseEmitter.complete();
-//        });
-//        sseEmitter.onError(e -> {
-//            log.warn("SSE 연결 중 오류 발생, 레지스트리에서 제거: {}", email, e);
-//            sseEmitterRegistry.removeEmitter(email);
-//            sseEmitter.complete();
-//        });
 
         try {
             // 최초 연결 이벤트 전송

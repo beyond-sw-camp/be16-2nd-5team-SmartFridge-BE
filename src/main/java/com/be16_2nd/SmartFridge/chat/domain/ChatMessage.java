@@ -26,7 +26,6 @@ public class ChatMessage {
     @JoinColumn(name = "manager_chat_id")
     private ManagerChatRoom managerChatRoom;
 
-    @Enumerated(EnumType.STRING)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "purchase_chat_id")
     private PurchaseChatRoom purchaseChatRoom;
