@@ -15,4 +15,5 @@ public class FoodSearchDto {
     private Category category;
     private FoodFilterType filterType;
     private Boolean isTemp;
+    private Boolean viewAll = false;
 }

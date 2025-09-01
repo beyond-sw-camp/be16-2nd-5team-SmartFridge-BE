@@ -136,7 +136,9 @@ public class FoodService {
             List<Predicate> predicateList = new ArrayList<>();
             predicateList.add(cb.equal(root.get("fridge").get("id"), fridgeId));
 
-            if (userType == Type.COMMON) {
+            if (userType == Type.MANAGER && searchDto.getViewAll()) {
+
+            } else {
                 Predicate isSharedPredicate = cb.equal(root.get("isShared"), true);
                 Predicate isMyFoodPredicate = cb.equal(root.get("member"), member);
                 predicateList.add(cb.or(isSharedPredicate, isMyFoodPredicate));
