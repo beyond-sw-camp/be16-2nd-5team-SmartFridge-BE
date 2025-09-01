@@ -2,6 +2,7 @@ package com.be16_2nd.SmartFridge.fridge.service;
 
 import com.be16_2nd.SmartFridge.Post.repository.PostRepository;
 import com.be16_2nd.SmartFridge.chat.repository.ManagerChatRoomRepository;
+import com.be16_2nd.SmartFridge.chat.service.ChatService;
 import com.be16_2nd.SmartFridge.common.service.FridgeAccessValidator;
 import com.be16_2nd.SmartFridge.chat.service.ManagerChatRoomLifecycle;
 import com.be16_2nd.SmartFridge.food.repository.FoodRepository;
@@ -42,6 +43,7 @@ public class FridgeService {
     private final FridgeAccessValidator fridgeAccessValidator;
     private final FoodRepository foodRepository;
     private final PostRepository postRepository;
+    private final ChatService chatService;
 
     public FridgeCreateResDto create(FridgeCreateDto fridgeCreateDto){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -164,12 +166,13 @@ public class FridgeService {
             fridgeMemberRepository.deleteByFridgeAndMember(context.fridge(), context.member());
             foodRepository.deleteAllByFridgeAndMember(context.fridge(), context.member());
             postRepository.deleteAllByFridgeAndMember(context.fridge(), context.member());
+            managerChatRoomLifecycle.deleteManagerChatRoom(context.member(), context.fridge());
         }
         return context.fridge().getId();
     }
 
     @Transactional
-    public void delegateManager(Long fridgeId, UUID memberId) {
+    public void delegateManager(Long fridgeId, String memberEmail) {
         FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
         if (context.type() != Type.MANAGER) {
             throw new AccessDeniedException("오직 MANAGER만 권한을 위임할 수 있습니다.");
@@ -177,7 +180,7 @@ public class FridgeService {
         Fridge fridge = context.fridge();
         Member currentManager = context.member();
 
-        Member newManager = memberRepository.findById(memberId)
+        Member newManager = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(() -> new EntityNotFoundException("새로운 매니저로 지정할 사용자를 찾을 수 없습니다."));
 
         FridgeMember currentFridgeManager = fridgeMemberRepository.findByFridgeAndMember(fridge, currentManager)
@@ -190,25 +193,27 @@ public class FridgeService {
     }
 
     @Transactional
-    public void removeMember(Long fridgeId, UUID memberId) {
+    public void removeMember(Long fridgeId, String memberEmail) {
         FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
 
         if (context.type() != Type.MANAGER) {
             throw new AccessDeniedException("오직 MANAGER만 멤버를 삭제할 수 있습니다.");
         }
 
-        if (context.member().getId().equals(memberId)) {
+        if (context.member().getEmail().equals(memberEmail)) {
             throw new IllegalArgumentException("MANAGER는 자기 자신을 삭제할 수 없습니다.");
         }
 
         Fridge fridge = context.fridge();
 
-        Member memberToDelete = memberRepository.findById(memberId)
+        Member memberToDelete = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(() -> new EntityNotFoundException("삭제할 사용자를 찾을 수 없습니다."));
 
         FridgeMember fridgeMemberToDelete = fridgeMemberRepository.findByFridgeAndMember(fridge, memberToDelete)
                 .orElseThrow(() -> new EntityNotFoundException("삭제할 멤버가 냉장고에 존재하지 않습니다."));
 
         fridgeMemberRepository.delete(fridgeMemberToDelete);
+        managerChatRoomLifecycle.deleteManagerChatRoom(memberToDelete, fridge);
+        chatService.leaveForcePurchaseChatRoom(fridgeId, memberEmail);
     }
 }

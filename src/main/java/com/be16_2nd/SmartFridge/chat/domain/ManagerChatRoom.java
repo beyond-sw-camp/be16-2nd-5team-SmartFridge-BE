@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -29,6 +31,10 @@ public class ManagerChatRoom {
     private Member member;
 
     private LocalDateTime lastMessageAt;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "managerChatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatMessage> chatMessages = new ArrayList<>();
 
     public void updateLastMessageAt(LocalDateTime lastMessageAt) {
         this.lastMessageAt = lastMessageAt;

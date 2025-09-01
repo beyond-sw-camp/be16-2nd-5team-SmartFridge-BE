@@ -32,4 +32,11 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     // Admin의 안읽은 알림 개수 조회
     long countByReceiverAndIsReadFalse(Member receiver);
 
+    Long countByReceiverAndNotificationTypeInAndIsReadFalse(Member member, List<NotificationType> notificationTypes);
+
+    List<Notification> findTop5ByReceiverAndFridgeIdAndIsReadFalseAndNotificationTypeInOrderByCreatedTimeDesc(
+            Member receiver,
+            Long fridgeId,
+            List<NotificationType> notificationTypes
+    );
 }

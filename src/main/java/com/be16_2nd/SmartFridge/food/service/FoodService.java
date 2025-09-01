@@ -16,7 +16,9 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,7 +62,13 @@ public class FoodService {
 
         Specification<Food> specification = createFoodSpecification(fridgeId, context.type(), context.member(), isShared, foodSearchDto);
 
-        return foodRepository.findAll(specification, pageable).map(FoodResDto::fromEntity);
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.ASC, "expirationDateTime"));
+
+
+        return foodRepository.findAll(specification, sortedPageable).map(FoodResDto::fromEntity);
     }
 
 
@@ -128,7 +136,9 @@ public class FoodService {
             List<Predicate> predicateList = new ArrayList<>();
             predicateList.add(cb.equal(root.get("fridge").get("id"), fridgeId));
 
-            if (userType == Type.COMMON) {
+            if (userType == Type.MANAGER && searchDto.getViewAll()) {
+
+            } else {
                 Predicate isSharedPredicate = cb.equal(root.get("isShared"), true);
                 Predicate isMyFoodPredicate = cb.equal(root.get("member"), member);
                 predicateList.add(cb.or(isSharedPredicate, isMyFoodPredicate));

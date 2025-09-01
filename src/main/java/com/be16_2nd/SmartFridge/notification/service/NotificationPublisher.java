@@ -22,11 +22,10 @@ public class NotificationPublisher {
         this.objectMapper = objectMapper;
     }
 
-    public void publish(Long fridgeId, String senderEmail, String receiverEmail, String contents, String type) {
+    public void publish(Long fridgeId, String receiverEmail, String contents, String type) {
         SseMessageDTO sseMessageDTO = SseMessageDTO.builder()
                 .type(type)
                 .fridgeId(fridgeId)
-                .senderEmail(senderEmail)
                 .receiverEmail(receiverEmail)
                 .contents(contents)
                 .build();

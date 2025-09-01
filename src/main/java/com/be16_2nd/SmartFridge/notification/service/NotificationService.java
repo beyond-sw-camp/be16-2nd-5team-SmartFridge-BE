@@ -15,6 +15,7 @@ import com.be16_2nd.SmartFridge.notification.domain.Notification;
 import com.be16_2nd.SmartFridge.notification.domain.NotificationSettingType;
 import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
 import com.be16_2nd.SmartFridge.notification.domain.TargetType;
+import com.be16_2nd.SmartFridge.notification.dto.NotificationBadgeResDto;
 import com.be16_2nd.SmartFridge.notification.dto.NotificationReadReqDto;
 import com.be16_2nd.SmartFridge.notification.dto.NotificationResDto;
 import com.be16_2nd.SmartFridge.notification.repository.NotificationRepository;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -105,7 +107,7 @@ public class NotificationService {
 
         // 알림 객체 build
         Notification notification = Notification.builder()
-                .sender(sender)
+//                .sender(sender)
                 .receiver(receiver)
                 .notificationType(notificationType)
                 .content(content)
@@ -124,7 +126,7 @@ public class NotificationService {
                 "' 유통기한이 " + daysLeftMessage;
 
         Notification notification = Notification.builder()
-                .sender(null)
+//                .sender(null)
                 .receiver(receiver)
                 .content(content)
                 .notificationType(NotificationType.EXPIRATION_IMMINENT)
@@ -141,24 +143,21 @@ public class NotificationService {
         // db 저장
         notificationRepository.save(notification);
 
-        Member sender = notification.getSender() == null ? null : notification.getSender();
         Member receiver = notification.getReceiver();
         NotificationSettingType notificationSettingType = notification.getNotificationType().getSettingType();
         boolean isActive = notificationSettingService.isNotificationActive(receiver, notificationSettingType);
 
         // 알림 수신 여부 설정에 따른 발송
         if (isActive) {
-            String senderEmail = (sender != null) ? sender.getEmail() : null;
-
             Long fridgeId = (notification.getFridge() != null) ? notification.getFridge().getId() : null;
 
-            notificationPublisher.publish(fridgeId, senderEmail , receiver.getEmail()
+            notificationPublisher.publish(fridgeId, receiver.getEmail()
                     , notification.getContent(), notification.getNotificationType().name());
         }
     }
 
     // 알림 목록 조회
-    public Page<NotificationResDto> findNotificationList(Long fridgeId, NotificationType notificationType, Pageable pageable) {
+    public Page<NotificationResDto> findNotificationList(Long fridgeId, Pageable pageable) {
         FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
         Member member = context.member();
         Fridge fridge = context.fridge();
@@ -178,20 +177,6 @@ public class NotificationService {
 
         return notificationRepository.findAll(specification, pageable)
                 .map(notification -> NotificationResDto.fromEntity(notification, fridgeMemberType));
-    }
-
-    // 문의 알림 count
-    public long countUnreadInquiries(Member member) {
-        return notificationRepository.countByReceiverAndNotificationTypeInAndIsReadFalse(
-                member, NotificationType.inquiryTypes()
-        );
-    }
-
-    // 채팅 알림 count
-    public long countUnreadChats(Member member) {
-        return notificationRepository.countByReceiverAndNotificationTypeInAndIsReadFalse(
-                member, NotificationType.chatTypes()
-        );
     }
     
     // 알림 삭제
@@ -214,5 +199,21 @@ public class NotificationService {
                 notification.setRead(true);
             }
         }
+    }
+
+    // 알림 배지에 표시할 최신 5개 알림
+    public List<NotificationBadgeResDto> getNotificationList(Long fridgeId, Member receiver) {
+        List<NotificationType> notificationTypeList = NotificationType.visibleInNotificationList();
+
+        List<Notification> notifications = notificationRepository
+                .findTop5ByReceiverAndFridgeIdAndIsReadFalseAndNotificationTypeInOrderByCreatedTimeDesc(
+                        receiver
+                        , fridgeId
+                        , notificationTypeList
+                );
+
+        return notifications.stream()
+                .map(NotificationBadgeResDto::fromEntity)
+                .collect(Collectors.toList());
     }
 }

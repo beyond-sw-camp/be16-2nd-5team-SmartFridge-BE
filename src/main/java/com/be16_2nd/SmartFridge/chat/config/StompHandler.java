@@ -77,15 +77,16 @@ public class StompHandler implements ChannelInterceptor {
         // 구독 끊을 경우 현재 접속 중인 사용자 제거
         if(StompCommand.UNSUBSCRIBE == accessor.getCommand()){
             log.info("subscribe해제");
-
             String email = (String) accessor.getSessionAttributes().get("email");
-            String roomType = Objects.requireNonNull(accessor.getNativeHeader("id")).get(0).split("/")[3];
-            Long roomId = Long.parseLong(Objects.requireNonNull(accessor.getNativeHeader("id")).get(0).split("/")[4]);
+            String roomType = Objects.requireNonNull(accessor.getNativeHeader("roomType")).get(0);
+            Long roomId = Long.parseLong(Objects.requireNonNull(accessor.getNativeHeader("roomId")).get(0));
 //             현재 채팅방 참여자 목록에서 제거
-            if(roomType.equals("MANAGER")){
+            if(roomType.equals("manager")){
                 ManagerChatRoomLifecycle.ManagerRoomParticipants.get(roomId).remove(email);
-            }else if(roomType.equals("PURCHASE")){
+                log.info(ManagerChatRoomLifecycle.ManagerRoomParticipants.get(roomId).toString());
+            }else if(roomType.equals("purchase")){
                 ManagerChatRoomLifecycle.PurchaseRoomParticipants.get(roomId).remove(email);
+                log.info(ManagerChatRoomLifecycle.PurchaseRoomParticipants.get(roomId).toString());
             }
         }
         return message;

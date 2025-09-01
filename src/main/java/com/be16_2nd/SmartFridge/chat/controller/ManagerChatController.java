@@ -19,10 +19,21 @@ public class ManagerChatController {
 
     private final ChatService chatService;
 
-    //    관리자 채팅방 이전 메시지 조회
+    //    관리자 채팅방 이전 메시지 조회(일반 사용자)
     @GetMapping("/history/{roomId}")
     public ResponseEntity<?> getManagerChatHistory(@PathVariable Long roomId) {
         List<ChatMessageDto> chatMessageDtos = chatService.getChatHistory(ChatRoomType.MANAGER, roomId);
+        return new ResponseEntity<>(CommonDto.builder()
+                .result(chatMessageDtos)
+                .status_code(HttpStatus.OK.value())
+                .status_message("채팅내역 조회 성공")
+                .build(), HttpStatus.OK);
+    }
+
+    //    관리자 채팅방 이전 메시지 조회(관리자)
+    @GetMapping("/history/room/{roomId}")
+    public ResponseEntity<?> getUserManagerChatHistory(@PathVariable Long roomId) {
+        List<ChatMessageDto> chatMessageDtos = chatService.getManagerChatHistory(roomId);
         return new ResponseEntity<>(CommonDto.builder()
                 .result(chatMessageDtos)
                 .status_code(HttpStatus.OK.value())
