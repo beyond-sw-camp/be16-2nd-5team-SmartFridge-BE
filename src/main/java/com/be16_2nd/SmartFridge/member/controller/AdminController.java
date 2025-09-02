@@ -121,4 +121,5 @@ public class AdminController {
                         .build(),HttpStatus.OK);
     }
 
+//    @DeleteMapping("/member/delete/{}")
 }

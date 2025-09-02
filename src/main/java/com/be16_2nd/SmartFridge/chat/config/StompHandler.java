@@ -83,10 +83,8 @@ public class StompHandler implements ChannelInterceptor {
 //             현재 채팅방 참여자 목록에서 제거
             if(roomType.equals("manager")){
                 ManagerChatRoomLifecycle.ManagerRoomParticipants.get(roomId).remove(email);
-                log.info(ManagerChatRoomLifecycle.ManagerRoomParticipants.get(roomId).toString());
             }else if(roomType.equals("purchase")){
                 ManagerChatRoomLifecycle.PurchaseRoomParticipants.get(roomId).remove(email);
-                log.info(ManagerChatRoomLifecycle.PurchaseRoomParticipants.get(roomId).toString());
             }
         }
         return message;
