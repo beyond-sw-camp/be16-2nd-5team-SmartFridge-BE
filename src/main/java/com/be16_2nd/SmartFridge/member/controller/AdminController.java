@@ -39,6 +39,15 @@ public class AdminController {
                         .build(),HttpStatus.OK);
     }
 
+    @DeleteMapping("/member/delete/{memberEmail}")
+    public ResponseEntity<?> deleteMember(@RequestBody String memberEmail){
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(adminService.deleteMember(memberEmail))
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("회원 삭제 완료")
+                        .build(),HttpStatus.OK);
+    }
 
     @GetMapping("/dashboard")
     public ResponseEntity<?> dashboard(){
@@ -112,5 +121,4 @@ public class AdminController {
                         .build(),HttpStatus.OK);
     }
 
-    @DeleteMapping("/member/delete/{}")
 }

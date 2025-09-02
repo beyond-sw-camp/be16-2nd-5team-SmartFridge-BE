@@ -56,8 +56,6 @@ public class MemberController {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
-        member.setLastLoginTime(LocalDateTime.now());
-
         return new ResponseEntity<>(
                 CommonDto.builder()
                         .result(loginResDto)
@@ -98,7 +96,6 @@ public class MemberController {
         Map<String, Object> loginInfo = new HashMap<>();
         loginInfo.put("id", originalMember.getId());
         loginInfo.put("token", jwtToken);
-        originalMember.setLastLoginTime(LocalDateTime.now());
         return new ResponseEntity<>(
                 CommonDto.builder()
                         .result(loginInfo)
@@ -126,7 +123,6 @@ public class MemberController {
         Map<String, Object> loginInfo = new HashMap<>();
         loginInfo.put("id", originalMember.getId());
         loginInfo.put("token", jwtToken);
-        originalMember.setLastLoginTime(LocalDateTime.now());
         return new ResponseEntity<>(
                 CommonDto.builder()
                         .result(loginInfo)
@@ -154,7 +150,6 @@ public class MemberController {
         Map<String, Object> loginInfo = new HashMap<>();
         loginInfo.put("id", originalMember.getId());
         loginInfo.put("token", jwtToken);
-        originalMember.setLastLoginTime(LocalDateTime.now());
         return new ResponseEntity<>(
                 CommonDto.builder()
                         .result(loginInfo)

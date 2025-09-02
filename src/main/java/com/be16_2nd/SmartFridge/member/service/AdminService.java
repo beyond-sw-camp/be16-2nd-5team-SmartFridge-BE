@@ -46,6 +46,13 @@ public class AdminService {
                 .map(m->MemberResDto.fromEntity(m)).collect(Collectors.toList());
     }
 
+    public Member deleteMember(String memberEmail){
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(()->new EntityNotFoundException("Member Not Found"));
+        memberRepository.delete(member);
+        return member;
+    }
+
     public AdminDashbordResDto dashbord(){
         Member member = memberRepository.findByEmail("admin@naver.com")
                 .orElseThrow(()->new EntityNotFoundException("ONLY ADMIN ALLOWED"));

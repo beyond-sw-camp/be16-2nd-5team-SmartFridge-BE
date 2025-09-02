@@ -17,6 +17,7 @@ public class FridgeMemberWithRoomIdResDto {
     private Long fridgeId;
     private String memberEmail;
     private String memberName;
+    private String memberProfileImage;
     private Type type;
     private Long roomId;
     private LocalDateTime joinedTime;
@@ -26,6 +27,7 @@ public class FridgeMemberWithRoomIdResDto {
                 .fridgeId(fridgeMember.getFridge().getId())
                 .memberEmail(fridgeMember.getMember().getEmail())
                 .memberName(fridgeMember.getMember().getName())
+                .memberProfileImage(fridgeMember.getMember().getProfileImage())
                 .type(fridgeMember.getType())
                 .joinedTime(fridgeMember.getCreatedTime())
                 .roomId(roomId)
