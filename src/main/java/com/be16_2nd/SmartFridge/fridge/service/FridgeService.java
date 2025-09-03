@@ -216,4 +216,12 @@ public class FridgeService {
         managerChatRoomLifecycle.deleteManagerChatRoom(memberToDelete, fridge);
         chatService.leaveForcePurchaseChatRoom(fridgeId, memberEmail);
     }
+
+    @Transactional
+    public String getFridgeMemberType(Long fridgeId) {
+        FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
+        Member member = context.member();
+        Fridge fridge = context.fridge();
+        return fridgeMemberRepository.findByFridgeAndMember(fridge, member).orElseThrow(()->new EntityNotFoundException("해당 냉장고에 회원이 존재하지 않습니다.")).getType().toString();
+    }
 }
