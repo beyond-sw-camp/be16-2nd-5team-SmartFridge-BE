@@ -21,8 +21,9 @@ public class FridgeMemberWithRoomIdResDto {
     private Type type;
     private Long roomId;
     private LocalDateTime joinedTime;
+    private Long unReadCount;
 
-    public static FridgeMemberWithRoomIdResDto fromEntity(FridgeMember fridgeMember, Long roomId){
+    public static FridgeMemberWithRoomIdResDto fromEntity(FridgeMember fridgeMember, Long roomId, Long unReadCount){
         return FridgeMemberWithRoomIdResDto.builder()
                 .fridgeId(fridgeMember.getFridge().getId())
                 .memberEmail(fridgeMember.getMember().getEmail())
@@ -31,6 +32,7 @@ public class FridgeMemberWithRoomIdResDto {
                 .type(fridgeMember.getType())
                 .joinedTime(fridgeMember.getCreatedTime())
                 .roomId(roomId)
+                .unReadCount(unReadCount)
                 .build();
     }
 }
