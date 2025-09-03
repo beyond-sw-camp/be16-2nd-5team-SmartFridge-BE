@@ -15,6 +15,7 @@ import java.time.temporal.ChronoUnit;
 @Builder
 public class MyPostResDto {
     private Long fridgeId;
+    private String fridgeName;
     private Long id;
     private String title;
     private String writer;
@@ -25,6 +26,7 @@ public class MyPostResDto {
     public static MyPostResDto fromEntity(Post post, Long viewCount) {
         return MyPostResDto.builder()
                 .fridgeId(post.getFridge().getId())
+                .fridgeName(post.getFridge().getFridgeName())
                 .id(post.getId())
                 .title(post.getTitle())
                 .writer(post.getMember().getName())
