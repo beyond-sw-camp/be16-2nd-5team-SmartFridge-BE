@@ -141,4 +141,15 @@ public class FridgeController {
         );
     }
 
+    @GetMapping("{fridgeId}/member/type")
+    public ResponseEntity<?> getMemberType(@PathVariable Long fridgeId) {
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(fridgeService.getFridgeMemberType(fridgeId))
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("냉장고 멤버 타입을 성공적으로 가져왔습니다.")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
 }
