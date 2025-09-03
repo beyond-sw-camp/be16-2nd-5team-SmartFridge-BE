@@ -80,7 +80,6 @@ public class InquiryService {
             inquiry.setContents(inquiryUpdateDto.getContents());
         if (inquiryUpdateDto.getInquiryType() != null)
             inquiry.setInquiryType(inquiryUpdateDto.getInquiryType());
-        inquiry.setUpdatedAt(LocalDateTime.now());
 
         if (inquiry.getInquiryImages() != null && !inquiry.getInquiryImages().isEmpty()) {
             for (InquiryImage inquiryImage : inquiry.getInquiryImages()) {

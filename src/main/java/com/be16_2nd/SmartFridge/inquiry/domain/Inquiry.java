@@ -46,13 +46,6 @@ public class Inquiry extends BaseTimeEntity {
     @Builder.Default
     private InquiryStatus status = InquiryStatus.PENDING;
 
-    @CreationTimestamp
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-
     @OneToMany(mappedBy = "inquiry", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @JsonIgnore

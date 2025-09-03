@@ -27,7 +27,6 @@ public class InquiryResDto {
     private List<String> imageUrls;
     private InquiryStatus status; // 상태 추가
     private List<InquiryCommentResDto> comments;
-    private LocalDateTime createdAt;
 
     public static InquiryResDto fromEntity(Inquiry inquiry) {
         return InquiryResDto.builder()
@@ -43,7 +42,6 @@ public class InquiryResDto {
                 .comments(inquiry.getComments().stream()
                                 .map(InquiryCommentResDto::new)
                                 .collect(Collectors.toList()))
-                .createdAt(inquiry.getCreatedAt())
                 .build();
     }
 }
