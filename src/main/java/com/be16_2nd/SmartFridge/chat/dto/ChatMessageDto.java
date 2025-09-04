@@ -21,6 +21,7 @@ public class ChatMessageDto {
     private String senderEmail;
     private String senderName;
     private List<String> imageUrls;
+    private String receiverEmail;
 
     private String timestamp;
 

@@ -279,7 +279,7 @@ public class ChatService {
         Member member = memberRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("존재하지 않은 회원입니다"));
         List<ChatMessage> chatMessages = new ArrayList<>();
         ManagerChatRoom managerChatRoom = managerChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
-
+        String receiverEmail = managerChatRoom.getMember().getEmail();
         // 해당 냉장고의 매니저가 아니면 예외 처리
         if(!fridgeMemberRepository.findByFridgeAndMember(managerChatRoom.getFridge(), member).orElseThrow(()->new EntityNotFoundException("fridge member not found")).getType().equals(Type.MANAGER)){
             throw new IllegalArgumentException("잘못된 접근입니다.");
@@ -301,6 +301,7 @@ public class ChatService {
                     .senderEmail(chatMessage.getSender().getEmail())
                     .senderName(chatMessage.getSender().getName())
                     .timestamp(chatMessage.getCreatedTime().toString())
+                    .receiverEmail(receiverEmail)
                     .build();
             chatMessageDtos.add(chatMessageDto);
         }
