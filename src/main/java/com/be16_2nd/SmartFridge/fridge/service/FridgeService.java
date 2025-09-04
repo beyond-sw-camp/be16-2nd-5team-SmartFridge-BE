@@ -2,6 +2,7 @@ package com.be16_2nd.SmartFridge.fridge.service;
 
 import com.be16_2nd.SmartFridge.Post.repository.PostRepository;
 import com.be16_2nd.SmartFridge.chat.domain.ChatRoomType;
+import com.be16_2nd.SmartFridge.chat.domain.IsRead;
 import com.be16_2nd.SmartFridge.chat.domain.ManagerChatRoom;
 import com.be16_2nd.SmartFridge.chat.repository.IsReadRepository;
 import com.be16_2nd.SmartFridge.chat.repository.ManagerChatRoomRepository;
@@ -200,6 +201,19 @@ public class FridgeService {
         FridgeMember newFridgeManager = fridgeMemberRepository.findByFridgeAndMember(fridge, newManager)
                 .orElseThrow(() -> new AccessDeniedException("새로운 매니저가 해당 냉장고의 멤버가 아닙니다."));
         newFridgeManager.setType(Type.MANAGER);
+
+        // 이전 관리자가 읽지 않은 메시지를 새 관리자에게 위임
+        List<ManagerChatRoom> managerChatRooms = managerChatRoomRepository.findByFridge(fridge);
+        for(ManagerChatRoom managerChatRoom : managerChatRooms){
+            List<IsRead> isReads = isReadRepository.findAllByRoomIdAndMemberAndChatRoomTypeAndIsReadFalse(managerChatRoom.getId(), currentManager, ChatRoomType.MANAGER);
+            for(IsRead isRead : isReads){
+                isRead.updateMember(newManager);
+//                새 관리자의 읽지 않은 메시지는 읽음 처리
+                if(isRead.getMember().getId().equals(newManager.getId())){
+                    isRead.updateIsRead(true);
+                }
+            }
+        }
     }
 
     @Transactional

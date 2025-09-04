@@ -37,4 +37,5 @@ public class IsRead {
     public void updateIsRead(boolean isRead) {
         this.isRead = isRead;
     }
+    public void updateMember(Member member) {this.member = member;}
 }

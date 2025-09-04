@@ -13,4 +13,5 @@ import java.util.Optional;
 public interface ManagerChatRoomRepository extends JpaRepository<ManagerChatRoom, Long> {
     Optional<ManagerChatRoom> findByFridgeAndMember(Fridge fridge, Member member);
     void deleteByFridgeAndMember(Fridge fridge, Member member);
+    List<ManagerChatRoom> findByFridge(Fridge fridge);
 }

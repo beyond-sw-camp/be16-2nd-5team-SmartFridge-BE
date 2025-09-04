@@ -12,4 +12,5 @@ import java.util.List;
 public interface IsReadRepository extends JpaRepository<IsRead, Long> {
     List<IsRead> findAllByRoomIdAndMemberAndChatRoomType(Long roomId, Member member, ChatRoomType chatRoomType);
     Long countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(Member member, Long roomId, ChatRoomType chatRoomType);
+    List<IsRead> findAllByRoomIdAndMemberAndChatRoomTypeAndIsReadFalse(Long roomId, Member member, ChatRoomType chatRoomType);
 }
