@@ -10,11 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InquiryCommentCreateDto {
-    private String content;
+    private String commentContents;
 
     public InquiryComment toEntity(InquiryCommentCreateDto inquiryCommentCreateDto, Inquiry inquiry) {
         return InquiryComment.builder()
-                .commentContents(inquiryCommentCreateDto.getContent())
+                .commentContents(inquiryCommentCreateDto.getCommentContents())
                 .inquiry(inquiry).build();
     }
 
