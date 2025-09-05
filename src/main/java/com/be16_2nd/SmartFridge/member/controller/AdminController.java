@@ -1,14 +1,22 @@
 package com.be16_2nd.SmartFridge.member.controller;
 
 import com.be16_2nd.SmartFridge.common.dto.CommonDto;
+import com.be16_2nd.SmartFridge.inquiry.domain.InquiryStatus;
 import com.be16_2nd.SmartFridge.inquiryComment.dto.InquiryCommentCreateDto;
+import com.be16_2nd.SmartFridge.inquiryComment.dto.InquiryCommentResDto;
+import com.be16_2nd.SmartFridge.inquiryComment.dto.InquiryCommentUpdateDto;
+import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.service.AdminService;
+import com.be16_2nd.SmartFridge.notification.dto.NotificationBadgeResDto;
+import com.be16_2nd.SmartFridge.notification.dto.NotificationReadReqDto;
 import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -69,8 +77,8 @@ public class AdminController {
                         .build(),HttpStatus.OK);
     }
 
-    @PostMapping("/inquiry/reply")
-    public ResponseEntity<?> replyInquiry(@RequestParam Long inquiryId
+    @PostMapping("/inquiry/reply/{inquiryId}")
+    public ResponseEntity<?> replyInquiry(@PathVariable Long inquiryId
             , @RequestBody InquiryCommentCreateDto inquiryCommentCreateDto){
         return new ResponseEntity<>(CommonDto.builder()
                 .result(adminService.replyInquiry(inquiryCommentCreateDto, inquiryId))
@@ -85,6 +93,27 @@ public class AdminController {
                         .result(adminService.inquiryDetail(inquiryId))
                         .status_code(HttpStatus.OK.value())
                         .status_message("문의 상세조회 성공")
+                        .build(),HttpStatus.OK);
+    }
+
+    @PostMapping("/inquiry/{inquiryId}/update")
+    public ResponseEntity<?> updateInquiry (@PathVariable Long inquiryId, @RequestBody InquiryStatus status){
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(adminService.updateInquiry(inquiryId, status))
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("상태변경 완료")
+                        .build(),HttpStatus.OK);
+    }
+
+    @PostMapping("/inquiry/{inquiryId}/reply/update")
+    public ResponseEntity<?> updateReply(@PathVariable Long inquiryId,
+                                         @RequestBody InquiryCommentUpdateDto dto){
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(adminService.updateReply(inquiryId, dto))
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("문의 답변이 수정되었습니다.")
                         .build(),HttpStatus.OK);
     }
 
@@ -121,5 +150,27 @@ public class AdminController {
                         .build(),HttpStatus.OK);
     }
 
-//    @DeleteMapping("/member/delete/{}")
+    // 알림 삭제
+    @DeleteMapping("/notification/delete/{notificationId}")
+    public ResponseEntity<?> deleteNotification(@PathVariable Long notificationId) {
+        notificationService.deleteNotification(notificationId);
+        return new ResponseEntity<>(CommonDto.builder()
+                .result(null)
+                .status_code(HttpStatus.OK.value())
+                .status_message("알림 삭제 성공")
+                .build()
+                , HttpStatus.OK);
+    }
+
+    // 알림 읽음 처리
+    @PatchMapping("/notification/isRead")
+    public ResponseEntity<?> readNotification(@RequestBody List<NotificationReadReqDto> notificationReadReqDtoList) {
+        notificationService.readNotification(notificationReadReqDtoList);
+        return new ResponseEntity<>(CommonDto.builder()
+                .result(null)
+                .status_code(HttpStatus.OK.value())
+                .status_message("알림 읽음 처리 성공")
+                .build()
+                , HttpStatus.OK);
+    }
 }

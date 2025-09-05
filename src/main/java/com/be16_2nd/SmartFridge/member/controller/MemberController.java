@@ -16,13 +16,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -285,5 +282,15 @@ public class MemberController {
                         .status_message("accessToken 재발급 성공!")
                         .build(),
                 HttpStatus.OK);
+    }
+
+    @GetMapping("/mynoti")
+    public ResponseEntity<?> mySettings(){
+        return new ResponseEntity<>(
+                CommonDto.builder()
+                        .result(memberService.mySettings())
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("알림 설정 조회 완료")
+                        .build(),HttpStatus.OK);
     }
 }

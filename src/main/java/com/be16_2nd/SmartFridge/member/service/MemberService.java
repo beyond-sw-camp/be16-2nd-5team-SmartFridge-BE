@@ -9,6 +9,10 @@ import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.domain.SocialType;
 import com.be16_2nd.SmartFridge.member.dto.*;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
+import com.be16_2nd.SmartFridge.notification.domain.NotificationSetting;
+import com.be16_2nd.SmartFridge.notification.dto.NotificationSettingDto;
+import com.be16_2nd.SmartFridge.notification.repository.NotificationRepository;
+import com.be16_2nd.SmartFridge.notification.repository.NotificationSettingRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +40,7 @@ public class MemberService {
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
     private final PostCommentRepository postCommentRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
 
     public Member save(MemberCreateDto memberCreateDto){
         if (memberRepository.findByEmail(memberCreateDto.getEmail()).isPresent()){
@@ -166,5 +171,18 @@ public class MemberService {
 
         memberRepository.save(member);
         return MemberResDto.fromEntity(member);
+    }
+
+    public List<NotificationSettingDto> mySettings(){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(()->new EntityNotFoundException("가입되지 않은 이메일 입니다."));
+        List<NotificationSetting> settings = notificationSettingRepository.findAllByMember(member);
+        List<NotificationSettingDto> mySetting = settings.stream()
+                .map(s -> new NotificationSettingDto(
+                        s.getNotificationSettingType().name(),
+                        s.isActive())
+                ).collect(Collectors.toList());
+        return mySetting;
     }
 }

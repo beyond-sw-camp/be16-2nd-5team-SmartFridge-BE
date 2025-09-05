@@ -4,6 +4,7 @@ import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
 import com.be16_2nd.SmartFridge.notification.domain.NotificationSetting;
 import com.be16_2nd.SmartFridge.notification.domain.NotificationSettingType;
+import com.be16_2nd.SmartFridge.notification.dto.NotificationSettingDto;
 import com.be16_2nd.SmartFridge.notification.dto.NotificationSettingReqDto;
 import com.be16_2nd.SmartFridge.notification.repository.NotificationSettingRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -12,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 

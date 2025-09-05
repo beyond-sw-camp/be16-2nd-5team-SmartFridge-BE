@@ -32,7 +32,6 @@ public class MemberResDto {
                 .role(member.getRole())
                 .profileImage(member.getProfileImage())
                 .createdTime(member.getCreatedTime())
-                .lastLoginTime(member.getLastLoginTime())
                 .build();
     }
 }

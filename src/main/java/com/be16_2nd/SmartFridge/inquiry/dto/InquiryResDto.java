@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,7 @@ public class InquiryResDto {
     private List<String> imageUrls;
     private InquiryStatus status; // 상태 추가
     private InquiryCommentResDto comments;
+    private LocalDateTime createdTime;
 
     public static InquiryResDto fromEntity(Inquiry inquiry) {
 
@@ -43,6 +45,7 @@ public class InquiryResDto {
                         .collect(Collectors.toList()))
                 .status(inquiry.getStatus())
                 .comments(inquiryComment != null ? new InquiryCommentResDto(inquiryComment) : null)
+                .createdTime(inquiry.getCreatedTime())
                 .build();
     }
 }

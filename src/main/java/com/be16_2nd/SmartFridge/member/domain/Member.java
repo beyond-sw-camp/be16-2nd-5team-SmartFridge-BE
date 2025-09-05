@@ -37,8 +37,6 @@ public class Member extends BaseTimeEntity {
 
     private String profileImage;
 
-    private LocalDateTime lastLoginTime;
-
     public void updatePw(String password) {
         this.password = password;
     }

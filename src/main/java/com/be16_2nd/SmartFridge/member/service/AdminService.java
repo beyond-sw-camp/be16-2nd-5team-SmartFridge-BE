@@ -8,6 +8,7 @@ import com.be16_2nd.SmartFridge.inquiry.repository.InquiryRepository;
 import com.be16_2nd.SmartFridge.inquiryComment.domain.InquiryComment;
 import com.be16_2nd.SmartFridge.inquiryComment.dto.InquiryCommentCreateDto;
 import com.be16_2nd.SmartFridge.inquiryComment.dto.InquiryCommentResDto;
+import com.be16_2nd.SmartFridge.inquiryComment.dto.InquiryCommentUpdateDto;
 import com.be16_2nd.SmartFridge.inquiryComment.repository.InquiryCommentRepository;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.dto.MemberResDto;
@@ -81,7 +82,7 @@ public class AdminService {
                 .orElseThrow(() -> new EntityNotFoundException("등록되지 않은 회원입니다."));
         InquiryComment inquiryComment = inquiryCommentRepository.save(inquiryCommentCreateDto.toEntity(inquiryCommentCreateDto, inquiry));
         inquiry.setStatus(InquiryStatus.COMPLETED);
-
+        inquiryRepository.save(inquiry);
         // 알림 발송 + db 저장
         notificationService.create(sender, receiver, NotificationType.ADMIN_REPLY, inquiryComment);
         return InquiryCommentResDto.builder()
@@ -94,6 +95,27 @@ public class AdminService {
     public InquiryResDto inquiryDetail(Long inquiryId){
         Inquiry inquiry = inquiryRepository.findAllByInquiryId(inquiryId)
                 .orElseThrow(()-> new EntityNotFoundException("존재하지 않는 문의글입니다."));
+        return InquiryResDto.fromEntity(inquiry);
+    }
+
+    public InquiryResDto updateInquiry(Long inquiryId, InquiryStatus status){
+        Inquiry inquiry = inquiryRepository.findAllByInquiryId(inquiryId)
+                .orElseThrow(()->new EntityNotFoundException("존재하지 않는 문의글입니다."));
+        inquiry.setStatus(status);
+        inquiryRepository.save(inquiry);
+        return InquiryResDto.fromEntity(inquiry);
+    }
+
+    public InquiryResDto updateReply(Long inquiryId, InquiryCommentUpdateDto dto){
+        Inquiry inquiry = inquiryRepository.findAllByInquiryId(inquiryId)
+                .orElseThrow(()->new EntityNotFoundException("존재하지 않는 문의입니다."));
+        Long inquiryCommentId = inquiry.getComments().getCommentId();
+        InquiryComment inquiryComment = inquiryCommentRepository.findById(inquiryCommentId)
+                .orElseThrow(()->new EntityNotFoundException("답변이 없습니다."));
+        inquiryComment.updateCommentContents(dto.getNewCommentContents());
+        inquiryCommentRepository.save(inquiryComment);
+        inquiryRepository.save(inquiry);
+
         return InquiryResDto.fromEntity(inquiry);
     }
 
