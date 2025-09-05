@@ -12,9 +12,7 @@ import com.be16_2nd.SmartFridge.fridge.repository.FridgeMemberRepository;
 import com.be16_2nd.SmartFridge.fridge.repository.FridgeRepository;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
-import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
 import com.be16_2nd.SmartFridge.notification.service.NotificationPublisher;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -168,7 +165,10 @@ public class ChatService {
 
         } else if (chatMessage.getChatRoomType().equals(ChatRoomType.PURCHASE)) {
             // 공동구매 채팅
-            receiverEmails = chatMessage.getPurchaseChatRoom().getParticipants().stream()
+            PurchaseChatRoom chatRoom = purchaseChatRoomRepository.findById(chatMessage.getPurchaseChatRoom().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 채팅방입니다."));
+
+            receiverEmails = chatRoom.getParticipants().stream()
                     .map(ChatParticipant::getMember)
                     .map(Member::getEmail)
                     .filter(email -> !email.equals(senderEmail))
