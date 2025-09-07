@@ -102,4 +102,13 @@ public class PurchaseChatController {
                 .status_message("공동구매채팅 정보 가져오기 성공")
                 .build(), HttpStatus.OK);
     }
+
+    @GetMapping("/participants/{roomId}")
+    public ResponseEntity<?> getParticipants(@PathVariable Long roomId) {
+        return new ResponseEntity<>(CommonDto.builder()
+                .result(chatService.getParticipants(roomId))
+                .status_code(HttpStatus.OK.value())
+                .status_message("채팅방 참여자 목록 조회 성공")
+                .build(), HttpStatus.OK);
+    }
 }

@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,6 +52,7 @@ public class ChatService {
     private final ChatRoomParticipantValidator chatRoomParticipantValidator;
     private final FridgeAccessValidator fridgeAccessValidator;
     private final NotificationPublisher notificationPublisher;
+    private final ManagerChatRoomLifecycle managerChatRoomLifecycle;
 
     public ChatMessage saveMessage(Long roomId, ChatMessageDto chatMessageDto) {
 
@@ -486,5 +488,24 @@ public class ChatService {
     public PurchaseChatRoomResDto getRoomInfo(Long roomId){
         PurchaseChatRoom purchaseChatRoom = purchaseChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
         return PurchaseChatRoomResDto.fromPurchaseChatRoom(purchaseChatRoom);
+    }
+
+    // 참여자 목록 가져오기
+    public List<ParticipantsResDto> getParticipants(Long roomId){
+        PurchaseChatRoom purchaseChatRoom = purchaseChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByPurchaseChatRoom(purchaseChatRoom);
+
+        List<ParticipantsResDto> participantsResDtos = new ArrayList<>();
+        for(ChatParticipant chatParticipant : chatParticipants){
+            Member member = chatParticipant.getMember();
+            participantsResDtos.add(ParticipantsResDto.builder()
+                    .memberName(member.getName())
+                    .memberEmail(member.getEmail())
+                    .isOnline(ManagerChatRoomLifecycle.PurchaseRoomParticipants.getOrDefault(roomId, Collections.emptySet()).contains(member.getEmail()))
+                    .isCreator(member.getEmail().equals(purchaseChatRoom.getCreator().getEmail()))
+                    .profileImage(member.getProfileImage())
+                    .build());
+        }
+        return participantsResDtos;
     }
 }
