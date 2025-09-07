@@ -431,9 +431,9 @@ public class ChatService {
         chatParticipantRepository.delete(chatParticipant);
         chatRoom.updateCurrentParticipants(chatRoom.getCurrentParticipants()-1);
 
-        // 방장이 나갈 시 채팅방 삭제(소프트)
+        // 방장이 나갈 시 채팅방 삭제(하드)
         if(chatRoom.getCreator().equals(member)){
-            chatRoom.updateIsActive(false);
+            purchaseChatRoomRepository.delete(chatRoom);
         }
     }
 
@@ -458,9 +458,9 @@ public class ChatService {
                 purchaseChatRoom.updateCurrentParticipants(purchaseChatRoom.getCurrentParticipants()-1);
             }
 
-            // 방장이 나갈 시 채팅방 삭제(소프트)
+            // 방장이 나갈 시 채팅방 삭제(하드)
             if(purchaseChatRoom.getCreator().equals(member)){
-                purchaseChatRoom.updateIsActive(false);
+                purchaseChatRoomRepository.delete(purchaseChatRoom);
             }
         }
     }
