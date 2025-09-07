@@ -18,4 +18,5 @@ public class MyChatListResDto {
     private Long unReadCount;
     private Boolean isCreator;
     private Boolean isManager;
+    private String JoinStatus;
 }

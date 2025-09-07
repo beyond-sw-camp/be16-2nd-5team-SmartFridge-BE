@@ -16,4 +16,5 @@ public class PurchaseChatRoomListResDto {
     private Integer currentParticipants;
     private Integer maxParticipants;
     private Boolean isCreator;
+    private String joinStatus;
 }

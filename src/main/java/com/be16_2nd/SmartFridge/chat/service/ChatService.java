@@ -210,12 +210,13 @@ public class ChatService {
                 Long count = isReadRepository.countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(member, chatParticipant.getPurchaseChatRoom().getId(), ChatRoomType.PURCHASE);
                 MyChatListResDto myChatListResDto = MyChatListResDto.builder()
                         .roomId(chatParticipant.getPurchaseChatRoom().getId())
-                        .userName(member.getName())
+                        .userName(chatParticipant.getPurchaseChatRoom().getCreator().getName())
                         .currentParticipants(chatParticipant.getPurchaseChatRoom().getCurrentParticipants())
                         .maxParticipants(chatParticipant.getPurchaseChatRoom().getMaxParticipants())
                         .roomName(chatParticipant.getPurchaseChatRoom().getTitle())
                         .unReadCount(count)
                         .isCreator(chatParticipant.getPurchaseChatRoom().getCreator().getId().equals(member.getId()))
+                        .JoinStatus(chatParticipant.getPurchaseChatRoom().getJoinStatus().toString())
                         .build();
                 chatListResDtos.add(myChatListResDto);
             }
@@ -366,6 +367,8 @@ public class ChatService {
                     .isCreator(purchaseChatRoom.getCreator().getId().equals(member.getId()))
                     .currentParticipants(purchaseChatRoom.getCurrentParticipants())
                     .maxParticipants(purchaseChatRoom.getMaxParticipants())
+                    .joinStatus(purchaseChatRoom.getJoinStatus().toString())
+                    .userName(purchaseChatRoom.getCreator().getName())
                     .build();
             purchaseChatRoomListResDtos.add(purchaseChatRoomListResDto);
         }
