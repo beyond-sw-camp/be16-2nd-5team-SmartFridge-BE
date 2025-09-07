@@ -6,6 +6,10 @@ import com.be16_2nd.SmartFridge.chat.dto.ChatRoomCreateDto;
 import com.be16_2nd.SmartFridge.chat.service.ChatService;
 import com.be16_2nd.SmartFridge.common.dto.CommonDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,8 +26,9 @@ public class PurchaseChatController {
 
     // 공동 구매 채팅방 이전 메시지 조회
     @GetMapping("/history/{roomId}")
-    public ResponseEntity<?> getPurchaseChatHistory(@PathVariable Long roomId) {
-        List<ChatMessageDto> chatMessageDtos = chatService.getChatHistory(ChatRoomType.PURCHASE, roomId);
+    public ResponseEntity<?> getPurchaseChatHistory(@PathVariable Long roomId,
+                                                    @PageableDefault(size = 40, sort = "createdTime", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<ChatMessageDto> chatMessageDtos = chatService.getChatHistory(ChatRoomType.PURCHASE, roomId, pageable);
         return new ResponseEntity<>(CommonDto.builder()
                 .result(chatMessageDtos)
                 .status_code(HttpStatus.OK.value())
