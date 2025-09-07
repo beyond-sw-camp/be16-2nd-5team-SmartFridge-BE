@@ -111,4 +111,12 @@ public class PurchaseChatController {
                 .status_message("채팅방 참여자 목록 조회 성공")
                 .build(), HttpStatus.OK);
     }
+
+    @DeleteMapping("/{roomId}/complete")
+    public ResponseEntity<?> completePurchase(@PathVariable Long roomId) {
+        return new ResponseEntity<>(CommonDto.builder()
+                .result(chatService.completePurchase(roomId))
+                .status_message("채팅방 종료 완료")
+                .build(), HttpStatus.OK);
+    }
 }

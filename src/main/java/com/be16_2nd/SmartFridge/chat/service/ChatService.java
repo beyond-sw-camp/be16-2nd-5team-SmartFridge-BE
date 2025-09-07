@@ -508,4 +508,11 @@ public class ChatService {
         }
         return participantsResDtos;
     }
+    
+    // 냉장고 구매 완료 버튼 누를 시 CLOSE상태로 전환
+    public Long completePurchase(Long roomId){
+        PurchaseChatRoom purchaseChatRoom = purchaseChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
+        purchaseChatRoom.updateJoinStatus(JoinStatus.CLOSE);
+        return roomId;
+    }
 }
