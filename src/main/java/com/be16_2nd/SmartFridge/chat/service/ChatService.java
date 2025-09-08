@@ -18,6 +18,8 @@ import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,6 +52,8 @@ public class ChatService {
     private final ChatImageService chatImageService;
     private final ChatRoomParticipantValidator chatRoomParticipantValidator;
     private final FridgeAccessValidator fridgeAccessValidator;
+    private final NotificationPublisher notificationPublisher;
+    private final ManagerChatRoomLifecycle managerChatRoomLifecycle;
     private final NotificationService notificationService;
 
     public ChatMessage saveMessage(Long roomId, ChatMessageDto chatMessageDto) {
@@ -210,12 +215,13 @@ public class ChatService {
                 Long count = isReadRepository.countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(member, chatParticipant.getPurchaseChatRoom().getId(), ChatRoomType.PURCHASE);
                 MyChatListResDto myChatListResDto = MyChatListResDto.builder()
                         .roomId(chatParticipant.getPurchaseChatRoom().getId())
-                        .userName(member.getName())
+                        .userName(chatParticipant.getPurchaseChatRoom().getCreator().getName())
                         .currentParticipants(chatParticipant.getPurchaseChatRoom().getCurrentParticipants())
                         .maxParticipants(chatParticipant.getPurchaseChatRoom().getMaxParticipants())
                         .roomName(chatParticipant.getPurchaseChatRoom().getTitle())
                         .unReadCount(count)
                         .isCreator(chatParticipant.getPurchaseChatRoom().getCreator().getId().equals(member.getId()))
+                        .JoinStatus(chatParticipant.getPurchaseChatRoom().getJoinStatus().toString())
                         .build();
                 chatListResDtos.add(myChatListResDto);
             }
@@ -224,46 +230,43 @@ public class ChatService {
     }
 
     // 나의 채팅메시지 내역 조회
-    public List<ChatMessageDto> getChatHistory(ChatRoomType chatRoomType, Long roomId) {
-        Member member = memberRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("존재하지 않은 회원입니다"));
-        List<ChatMessage> chatMessages = new ArrayList<>();
+    public Page<ChatMessageDto> getChatHistory(ChatRoomType chatRoomType, Long roomId, Pageable pageable) {
+        Member member = memberRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않은 회원입니다"));
+
+        Page<ChatMessage> chatMessagePage; // 1. List 대신 Page<Entity>로 결과를 받기 위한 변수 선언
 
         // 관리자 채팅 내역 조회
-        if (chatRoomType.equals(ChatRoomType.MANAGER)){
-            // 채팅방 찾기
-            ManagerChatRoom managerChatRoom = managerChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
+        if (chatRoomType.equals(ChatRoomType.MANAGER)) {
+            ManagerChatRoom managerChatRoom = managerChatRoomRepository.findById(roomId)
+                    .orElseThrow(()->new EntityNotFoundException("room cannot find"));
 
-            // 냉장고 관리자가 본인의 채팅방 접근 시 예외 발생
-            if(fridgeMemberRepository.findByFridgeAndMember(managerChatRoom.getFridge(), member).orElseThrow(()->new EntityNotFoundException("fridge member not found")).getType().equals(Type.MANAGER)){
+            if (fridgeMemberRepository.findByFridgeAndMember(managerChatRoom.getFridge(), member)
+                    .orElseThrow(()->new EntityNotFoundException("fridge member not found")).getType().equals(Type.MANAGER)) {
                 throw new IllegalArgumentException("잘못된 접근입니다.");
             }
-
-            // 채팅방에 속한 회원인지 검증
             chatRoomParticipantValidator.validateManagerRoomParticipant(member.getEmail(), roomId);
 
-            // 메시지 조회
-            chatMessages = chatMessageRepository.findByManagerChatRoomOrderByCreatedTimeAsc(managerChatRoom);
+            // 2. Repository에서 Pageable을 사용해 메시지 조회
+            chatMessagePage = chatMessageRepository.findByManagerChatRoom(managerChatRoom, pageable);
         }
         // 공동 구매 채팅 내역 조회
-        else{
-            // 채팅방 찾기
-            PurchaseChatRoom purchaseChatRoom = purchaseChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
+        else {
+            PurchaseChatRoom purchaseChatRoom = purchaseChatRoomRepository.findById(roomId)
+                    .orElseThrow(()->new EntityNotFoundException("room cannot find"));
+            chatRoomParticipantValidator.validatePurchaseRoomParticipant(member.getEmail(), roomId);
 
-            // 채팅방에 속한 회원인지 검증
-            chatRoomParticipantValidator.validatePurchaseRoomParticipant((member.getEmail()), roomId);
-
-            // 메시지 조회
-            chatMessages = chatMessageRepository.findByPurchaseChatRoomOrderByCreatedTimeAsc(purchaseChatRoom);
+            // 2. Repository에서 Pageable을 사용해 메시지 조회
+            chatMessagePage = chatMessageRepository.findByPurchaseChatRoom(purchaseChatRoom, pageable);
         }
 
-        // 메시지를 응답 메시지DTO에 담아 return
-        List<ChatMessageDto> chatMessageDtos = new ArrayList<>();
-        for(ChatMessage chatMessage : chatMessages){
-            List<String> imageUrls = new ArrayList<>();
-            for (ChatMessageImage chatMessageImage : chatMessage.getChatMessageImages()){
-                imageUrls.add(chatMessageImage.getImageUrl());
-            }
-            ChatMessageDto chatMessageDto = ChatMessageDto.builder()
+        // 3. 기존 for문을 Page.map()을 사용하여 DTO로 변환 (훨씬 간결해집니다)
+        return chatMessagePage.map(chatMessage -> {
+            List<String> imageUrls = chatMessage.getChatMessageImages().stream()
+                    .map(ChatMessageImage::getImageUrl)
+                    .toList(); // Java 16+ .toList() or .collect(Collectors.toList())
+
+            return ChatMessageDto.builder()
                     .chatRoomType(chatMessage.getChatRoomType().toString())
                     .message(chatMessage.getContents())
                     .imageUrls(imageUrls)
@@ -271,43 +274,44 @@ public class ChatService {
                     .senderName(chatMessage.getSender().getName())
                     .timestamp(chatMessage.getCreatedTime().toString())
                     .build();
-            chatMessageDtos.add(chatMessageDto);
-        }
-        return chatMessageDtos;
+        });
     }
 
     // 관리자가 다른 유저의 채팅방 내역
-    public List<ChatMessageDto> getManagerChatHistory(Long roomId) {
-        Member member = memberRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("존재하지 않은 회원입니다"));
-        List<ChatMessage> chatMessages = new ArrayList<>();
-        ManagerChatRoom managerChatRoom = managerChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
+    public Page<ChatMessageDto> getManagerChatHistory(Long roomId, Pageable pageable) {
+        Member member = memberRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않은 회원입니다"));
+
+        ManagerChatRoom managerChatRoom = managerChatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new EntityNotFoundException("room cannot find"));
+
         String receiverEmail = managerChatRoom.getMember().getEmail();
-        // 해당 냉장고의 매니저가 아니면 예외 처리
-        if(!fridgeMemberRepository.findByFridgeAndMember(managerChatRoom.getFridge(), member).orElseThrow(()->new EntityNotFoundException("fridge member not found")).getType().equals(Type.MANAGER)){
+
+        // 해당 냉장고의 매니저가 아니면 예외 처리 (기존 로직 유지)
+        if (!fridgeMemberRepository.findByFridgeAndMember(managerChatRoom.getFridge(), member)
+                .orElseThrow(() -> new EntityNotFoundException("fridge member not found")).getType().equals(Type.MANAGER)) {
             throw new IllegalArgumentException("잘못된 접근입니다.");
         }
 
-        // 메시지 조회
-        chatMessages = chatMessageRepository.findByManagerChatRoomOrderByCreatedTimeAsc(managerChatRoom);
-        // 메시지를 응답 메시지DTO에 담아 return
-        List<ChatMessageDto> chatMessageDtos = new ArrayList<>();
-        for(ChatMessage chatMessage : chatMessages){
-            List<String> imageUrls = new ArrayList<>();
-            for (ChatMessageImage chatMessageImage : chatMessage.getChatMessageImages()){
-                imageUrls.add(chatMessageImage.getImageUrl());
-            }
-            ChatMessageDto chatMessageDto = ChatMessageDto.builder()
+        // 2. Pageable을 사용해 메시지 조회
+        Page<ChatMessage> chatMessagePage = chatMessageRepository.findByManagerChatRoom(managerChatRoom, pageable);
+
+        // 3. for문을 Page.map()을 사용하여 DTO로 변환
+        return chatMessagePage.map(chatMessage -> {
+            List<String> imageUrls = chatMessage.getChatMessageImages().stream()
+                    .map(ChatMessageImage::getImageUrl)
+                    .toList();
+
+            return ChatMessageDto.builder()
                     .chatRoomType(chatMessage.getChatRoomType().toString())
                     .message(chatMessage.getContents())
                     .imageUrls(imageUrls)
                     .senderEmail(chatMessage.getSender().getEmail())
                     .senderName(chatMessage.getSender().getName())
                     .timestamp(chatMessage.getCreatedTime().toString())
-                    .receiverEmail(receiverEmail)
+                    .receiverEmail(receiverEmail) // 외부 변수인 receiverEmail 사용
                     .build();
-            chatMessageDtos.add(chatMessageDto);
-        }
-        return chatMessageDtos;
+        });
     }
 
     
@@ -366,6 +370,8 @@ public class ChatService {
                     .isCreator(purchaseChatRoom.getCreator().getId().equals(member.getId()))
                     .currentParticipants(purchaseChatRoom.getCurrentParticipants())
                     .maxParticipants(purchaseChatRoom.getMaxParticipants())
+                    .joinStatus(purchaseChatRoom.getJoinStatus().toString())
+                    .userName(purchaseChatRoom.getCreator().getName())
                     .build();
             purchaseChatRoomListResDtos.add(purchaseChatRoomListResDto);
         }
@@ -423,9 +429,9 @@ public class ChatService {
         chatParticipantRepository.delete(chatParticipant);
         chatRoom.updateCurrentParticipants(chatRoom.getCurrentParticipants()-1);
 
-        // 방장이 나갈 시 채팅방 삭제(소프트)
+        // 방장이 나갈 시 채팅방 삭제(하드)
         if(chatRoom.getCreator().equals(member)){
-            chatRoom.updateIsActive(false);
+            purchaseChatRoomRepository.delete(chatRoom);
         }
     }
 
@@ -450,9 +456,9 @@ public class ChatService {
                 purchaseChatRoom.updateCurrentParticipants(purchaseChatRoom.getCurrentParticipants()-1);
             }
 
-            // 방장이 나갈 시 채팅방 삭제(소프트)
+            // 방장이 나갈 시 채팅방 삭제(하드)
             if(purchaseChatRoom.getCreator().equals(member)){
-                purchaseChatRoom.updateIsActive(false);
+                purchaseChatRoomRepository.delete(purchaseChatRoom);
             }
         }
     }
@@ -483,5 +489,31 @@ public class ChatService {
     public PurchaseChatRoomResDto getRoomInfo(Long roomId){
         PurchaseChatRoom purchaseChatRoom = purchaseChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
         return PurchaseChatRoomResDto.fromPurchaseChatRoom(purchaseChatRoom);
+    }
+
+    // 참여자 목록 가져오기
+    public List<ParticipantsResDto> getParticipants(Long roomId){
+        PurchaseChatRoom purchaseChatRoom = purchaseChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByPurchaseChatRoom(purchaseChatRoom);
+
+        List<ParticipantsResDto> participantsResDtos = new ArrayList<>();
+        for(ChatParticipant chatParticipant : chatParticipants){
+            Member member = chatParticipant.getMember();
+            participantsResDtos.add(ParticipantsResDto.builder()
+                    .memberName(member.getName())
+                    .memberEmail(member.getEmail())
+                    .isOnline(ManagerChatRoomLifecycle.PurchaseRoomParticipants.getOrDefault(roomId, Collections.emptySet()).contains(member.getEmail()))
+                    .isCreator(member.getEmail().equals(purchaseChatRoom.getCreator().getEmail()))
+                    .profileImage(member.getProfileImage())
+                    .build());
+        }
+        return participantsResDtos;
+    }
+
+    // 냉장고 구매 완료 버튼 누를 시 CLOSE상태로 전환
+    public Long completePurchase(Long roomId){
+        PurchaseChatRoom purchaseChatRoom = purchaseChatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("room cannot find"));
+        purchaseChatRoom.updateJoinStatus(JoinStatus.CLOSE);
+        return roomId;
     }
 }

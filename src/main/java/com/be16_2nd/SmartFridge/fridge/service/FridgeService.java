@@ -22,6 +22,7 @@ import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
 import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class FridgeService {
 
@@ -108,6 +110,7 @@ public class FridgeService {
             Long unReadCount = isReadRepository.countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(manager, managerChatRoom.getId(), ChatRoomType.MANAGER);
 
             fridgeMemberWithRoomIdResDtos.add(FridgeMemberWithRoomIdResDto.fromEntity(fridgeMember, roomId, unReadCount));
+            log.info("test");
         }
         return fridgeMemberWithRoomIdResDtos;
     }

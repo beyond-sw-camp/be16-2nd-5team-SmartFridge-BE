@@ -3,6 +3,8 @@ package com.be16_2nd.SmartFridge.chat.repository;
 import com.be16_2nd.SmartFridge.chat.domain.ChatMessage;
 import com.be16_2nd.SmartFridge.chat.domain.ManagerChatRoom;
 import com.be16_2nd.SmartFridge.chat.domain.PurchaseChatRoom;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +14,7 @@ import java.util.List;
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
     List<ChatMessage> findByManagerChatRoomOrderByCreatedTimeAsc(ManagerChatRoom managerChatRoom);
     List<ChatMessage> findByPurchaseChatRoomOrderByCreatedTimeAsc(PurchaseChatRoom purchaseChatRoom);
+
+    Page<ChatMessage> findByManagerChatRoom(ManagerChatRoom managerChatRoom, Pageable pageable);
+    Page<ChatMessage> findByPurchaseChatRoom(PurchaseChatRoom purchaseChatRoom, Pageable pageable);
 }
