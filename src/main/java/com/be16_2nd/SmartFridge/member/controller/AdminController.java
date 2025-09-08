@@ -47,7 +47,7 @@ public class AdminController {
                         .build(),HttpStatus.OK);
     }
 
-    @DeleteMapping("/member/delete/{memberEmail}")
+    @DeleteMapping("/member/delete/")
     public ResponseEntity<?> deleteMember(@RequestBody String memberEmail){
         return new ResponseEntity<>(
                 CommonDto.builder()
