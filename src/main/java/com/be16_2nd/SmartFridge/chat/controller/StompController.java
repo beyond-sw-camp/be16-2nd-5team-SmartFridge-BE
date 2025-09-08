@@ -5,8 +5,8 @@ import com.be16_2nd.SmartFridge.chat.dto.ChatMessageDto;
 import com.be16_2nd.SmartFridge.chat.dto.ChatMessageEmailDto;
 import com.be16_2nd.SmartFridge.chat.service.ChatRedisPubSubService;
 import com.be16_2nd.SmartFridge.chat.service.ChatService;
-import com.be16_2nd.SmartFridge.fridge.repository.FridgeMemberRepository;
 import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
+import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.notification.service.NotificationPublisher;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,9 +22,8 @@ import org.springframework.stereotype.Controller;
 public class StompController {
     private final ChatService chatService;
     private final ChatRedisPubSubService chatRedisPubSubService;
-    private final NotificationPublisher notificationPublisher;
-    private final FridgeMemberRepository fridgeMemberRepository;
 
+    private final NotificationPublisher notificationPublisher;
     @MessageMapping("MANAGER/{roomId}")
     public void sendMessageToManager(@DestinationVariable Long roomId, ChatMessageDto chatMessageReqDto) throws JsonProcessingException {
         chatMessageReqDto.setChatRoomType("MANAGER");
@@ -39,10 +38,9 @@ public class StompController {
 
         notificationPublisher.publish(
                 chatMessage.getManagerChatRoom().getFridge().getId(),
-//                result.senderEmail(),
                 result.receiverEmailList().get(0),
-                "새 메시지가 도착했습니다",
-                NotificationType.ADMIN_CHAT.name()
+                NotificationType.MANAGER_CHAT.getDescription(),
+                NotificationType.MANAGER_CHAT.name()
         );
     }
     @MessageMapping("PURCHASE/{roomId}")
@@ -60,7 +58,7 @@ public class StompController {
             notificationPublisher.publish(
                     chatMessage.getPurchaseChatRoom().getFridge().getId()
                     , receiverEmail
-                    , "공동 구매 채팅방에 새로운 메세지가 도착했습니다."
+                    , NotificationType.GROUP_CHAT.getDescription()
                     , NotificationType.GROUP_CHAT.name()
             );
         }
