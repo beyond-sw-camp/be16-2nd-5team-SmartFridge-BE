@@ -2,6 +2,8 @@ package com.be16_2nd.SmartFridge.notification.service;
 
 import com.be16_2nd.SmartFridge.Post.domain.Post;
 import com.be16_2nd.SmartFridge.Post.domain.PostComment;
+import com.be16_2nd.SmartFridge.chat.domain.ManagerChatRoom;
+import com.be16_2nd.SmartFridge.chat.domain.PurchaseChatRoom;
 import com.be16_2nd.SmartFridge.common.service.FridgeAccessValidator;
 import com.be16_2nd.SmartFridge.food.domain.Food;
 import com.be16_2nd.SmartFridge.fridge.domain.Fridge;
@@ -16,6 +18,7 @@ import com.be16_2nd.SmartFridge.notification.domain.NotificationSettingType;
 import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
 import com.be16_2nd.SmartFridge.notification.domain.TargetType;
 import com.be16_2nd.SmartFridge.notification.dto.NotificationBadgeResDto;
+import com.be16_2nd.SmartFridge.notification.dto.NotificationInfo;
 import com.be16_2nd.SmartFridge.notification.dto.NotificationReadReqDto;
 import com.be16_2nd.SmartFridge.notification.dto.NotificationResDto;
 import com.be16_2nd.SmartFridge.notification.repository.NotificationRepository;
@@ -28,7 +31,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,11 +48,46 @@ public class NotificationService {
     public void create(Member sender, Member receiver,
                               NotificationType notificationType, Object entity) {
 
+        NotificationInfo notificationInfo = createNotificationInfo(notificationType, sender, entity);
+
+        // 알림 객체 build
+        Notification notification = Notification.builder()
+                .receiver(receiver)
+                .notificationType(notificationType)
+                .content(notificationInfo.getContents())
+                .targetType(notificationInfo.getTargetType())
+                .targetId(notificationInfo.getTargetId())
+                .fridge(notificationInfo.getFridge())
+                .build();
+
+        createAndSend(notification);
+    }
+
+    public void create(Member receiver,
+                       NotificationType notificationType, Object entity) {
+
+        NotificationInfo notificationInfo = createNotificationInfo(notificationType, null, entity);
+
+        // 알림 객체 build
+        Notification notification = Notification.builder()
+                .receiver(receiver)
+                .notificationType(notificationType)
+                .content(notificationInfo.getContents())
+                .targetType(notificationInfo.getTargetType())
+                .targetId(notificationInfo.getTargetId())
+                .fridge(notificationInfo.getFridge())
+                .build();
+
+        createAndSend(notification);
+    }
+
+    // 알림 객체 조립
+    private NotificationInfo createNotificationInfo(NotificationType notificationType, Member sender, Object entity) {
+
         String content;
         TargetType targetType;
         Long targetId;
         Fridge fridge = null;
-
 
         // 알림 종류에 따른 알림 객체 조립
         switch (notificationType) {
@@ -101,22 +138,23 @@ public class NotificationService {
                 targetId = inquiryComment.getInquiry().getInquiryId();
                 break;
 
+            case ROOM_FULL, ROOM_CLOSED:
+                PurchaseChatRoom purchaseChatRoom2 = (PurchaseChatRoom) entity;
+                content = "'" + purchaseChatRoom2.getTitle() + "'" + notificationType.getDescription();
+                targetType = TargetType.CHAT;
+                targetId = purchaseChatRoom2.getId();
+                break;
+
             default:
                 throw new IllegalArgumentException("지원하지 않는 알림 타입입니다. : " + notificationType);
         }
 
-        // 알림 객체 build
-        Notification notification = Notification.builder()
-//                .sender(sender)
-                .receiver(receiver)
-                .notificationType(notificationType)
-                .content(content)
+        return NotificationInfo.builder()
+                .contents(content)
                 .targetType(targetType)
                 .targetId(targetId)
                 .fridge(fridge)
                 .build();
-
-        createAndSend(notification);
     }
 
     // 유통기한 알림
@@ -126,7 +164,6 @@ public class NotificationService {
                 "' 유통기한이 " + daysLeftMessage;
 
         Notification notification = Notification.builder()
-//                .sender(null)
                 .receiver(receiver)
                 .content(content)
                 .notificationType(NotificationType.EXPIRATION_IMMINENT)
@@ -167,12 +204,24 @@ public class NotificationService {
                 .orElse(null);
 
         Specification<Notification> specification = (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            predicates.add(criteriaBuilder.equal(root.get("fridge"), fridge));
-            predicates.add(criteriaBuilder.equal(root.get("receiver"), member));
-            predicates.add(root.get("notificationType")
-                    .in(NotificationType.visibleInNotificationList())); // 문의/채팅 제외
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+
+            Predicate receiverPredicate = criteriaBuilder.equal(root.get("receiver"), member);
+            Predicate typePredicate = root.get("notificationType").in(NotificationType.visibleInNotificationList());
+
+            // fridgeId가 일치하거나 null인 경우 (문의 알림의 경우 fridgeId null)
+            Predicate fridgePredicate;
+            if (fridgeId != null) {
+                fridgePredicate = criteriaBuilder.or(
+                        criteriaBuilder.equal(root.get("fridge"), fridge),
+                        criteriaBuilder.isNull(root.get("fridge"))
+                );
+            } else {
+                // fridgeId가 null인 경우, fridge가 null인 알림만 가져옴
+                fridgePredicate = criteriaBuilder.isNull(root.get("fridge"));
+            }
+
+            // 모든 조건을 and로 묶어서 반환
+            return criteriaBuilder.and(receiverPredicate, typePredicate, fridgePredicate);
         };
 
         return notificationRepository.findAll(specification, pageable)
