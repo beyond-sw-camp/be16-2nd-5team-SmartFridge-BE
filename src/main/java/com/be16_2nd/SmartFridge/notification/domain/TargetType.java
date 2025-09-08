@@ -5,4 +5,5 @@ public enum TargetType {
     FOOD,
     POST,
     INQUIRY,
+    CHAT
 }
