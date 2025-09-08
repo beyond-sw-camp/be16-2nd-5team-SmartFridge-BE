@@ -12,7 +12,9 @@ import com.be16_2nd.SmartFridge.fridge.repository.FridgeMemberRepository;
 import com.be16_2nd.SmartFridge.fridge.repository.FridgeRepository;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
+import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
 import com.be16_2nd.SmartFridge.notification.service.NotificationPublisher;
+import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +49,7 @@ public class ChatService {
     private final ChatImageService chatImageService;
     private final ChatRoomParticipantValidator chatRoomParticipantValidator;
     private final FridgeAccessValidator fridgeAccessValidator;
-    private final NotificationPublisher notificationPublisher;
+    private final NotificationService notificationService;
 
     public ChatMessage saveMessage(Long roomId, ChatMessageDto chatMessageDto) {
 
@@ -404,12 +406,7 @@ public class ChatService {
             // 공동 구매 채팅방 개설자에게만 발송
             Member receiver = chatRoom.getCreator();
 
-            notificationPublisher.publish(
-                    chatRoom.getFridge().getId()
-                    , receiver.getEmail()
-                    , "공동 구매 채팅방이 가득 찼습니다"
-                    , "ROOM_FULL"
-            );
+            notificationService.create(receiver, NotificationType.ROOM_FULL, chatRoom);
         }
     }
 
