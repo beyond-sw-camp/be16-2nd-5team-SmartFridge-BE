@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: smartfridge-ingress
+  namespace: 5team
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    
+spec:
+  tls:
+  - hosts:
+    - server.smartfridge.cloud
+    secretName: server-smartfridge-cloud-tls  # 앞서 생성한 TLS 인증서의 Secret 이름.
+  rules:
+  - host: server.smartfridge.cloud
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: smartfridge-service
+            port:
+              number: 80

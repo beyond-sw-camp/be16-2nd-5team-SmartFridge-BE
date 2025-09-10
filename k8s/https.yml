@@ -1,0 +1,31 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: my-issuer
+  namespace: 5team
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: young.kwin@gmail.com
+    privateKeySecretRef:
+      name: my-issuer
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: server-smartfridge-cloud-tls
+  namespace: 5team
+spec:
+  secretName: server-smartfridge-cloud-tls
+  duration: 2160h
+  renewBefore: 360h
+  issuerRef:
+    name: my-issuer
+    kind: ClusterIssuer
+  commonName: server.smartfridge.cloud
+  dnsNames:
+  - server.smartfridge.cloud

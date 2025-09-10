@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smartfridge-depl
+  namespace: 5team
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: smartfridge
+  template:
+    metadata:
+      labels:
+        app: smartfridge
+    spec:
+      containers:
+      - name: smartfridge-container
+        image: 346903264902.dkr.ecr.ap-northeast-2.amazonaws.com/5team/smartfridge:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: "1"
+            memory: "500Mi"
+          requests:
+            cpu: "0.5"
+            memory: "250Mi"
+        env:
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: DB_HOST
+        - name: DB_PW
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: DB_PW
+        - name: SMTP_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: SMTP_EMAIL
+        - name: SMTP_PW
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: SMTP_PW
+        - name: AWS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: AWS_KEY
+        - name: AWS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: AWS_SECRET_KEY
+        - name: BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: BUCKET
+        - name: AT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: AT_KEY
+        - name: RT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: RT_KEY
+        - name: GOOGLE_ID
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: GOOGLE_ID
+        - name: GOOGLE_PW
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: GOOGLE_PW
+        - name: KAKAO_ID
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: KAKAO_ID
+        - name: NAVER_ID
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: NAVER_ID
+        - name: NAVER_PW
+          valueFrom:
+            secretKeyRef:
+              name: smartfridge-secrets
+              key: NAVER_PW
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smartfridge-service
+  namespace: 5team
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: smartfridge

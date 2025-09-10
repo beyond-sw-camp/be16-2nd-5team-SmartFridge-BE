@@ -1,0 +1,16 @@
+# 메트릭 서버 설치
+# kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: smartfridge-hpa
+  namespace: 5team
+spec: 
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: smartfridge-deployment
+  minReplicas: 2
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 30

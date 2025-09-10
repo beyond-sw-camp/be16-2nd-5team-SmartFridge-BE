@@ -12,7 +12,7 @@ spring:
     host: rabbitmq-service
     port: 5672
     username: guest
-    password: ${RQ_PW}
+    password: guest
     virtual-host: /
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver

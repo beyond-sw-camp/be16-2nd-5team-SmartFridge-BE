@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-deployment
+  namespace: 5team
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-rabbitmq
+  template:
+    metadata:
+      labels:
+        app: my-rabbitmq
+    spec:
+      containers:
+        - name: my-rabbitmq
+          # RabbitMQ 이미지 (관리자 UI 포함 버전)
+          image: rabbitmq:3-management
+          ports:
+            # AMQP 프로토콜 포트 (메시징용)
+            - name: amqp
+              containerPort: 5672
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-service
+  namespace: 5team
+spec:
+  type: ClusterIP
+  ports:
+    # 메시징 트래픽을 위한 서비스 포트
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+  selector:
+    # 위 Deployment의 Pod 라벨과 일치해야 합니다.
+    app: my-rabbitmq
