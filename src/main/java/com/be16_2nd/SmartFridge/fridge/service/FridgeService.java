@@ -55,7 +55,9 @@ public class FridgeService {
     public FridgeCreateResDto create(FridgeCreateDto fridgeCreateDto){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("member is not found"));
-        if (fridgeRepository.findByFridgeName(fridgeCreateDto.getFridgeName()).isPresent()){
+        boolean exists = fridgeRepository.existsByFridgeNameAndFridgeMemberList_Member(
+                fridgeCreateDto.getFridgeName(), member);
+        if (exists) {
             throw new IllegalArgumentException("이미 동일한 이름의 냉장고가 있습니다.");
         }
         Fridge fridge = fridgeCreateDto.toEntity();
