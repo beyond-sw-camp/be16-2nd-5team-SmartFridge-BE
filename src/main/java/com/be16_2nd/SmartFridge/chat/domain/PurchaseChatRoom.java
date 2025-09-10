@@ -63,6 +63,10 @@ public class PurchaseChatRoom {
     @Builder.Default
     private List<ChatParticipant> participants = new ArrayList<>();
 
+    @OneToMany(mappedBy = "purchaseChatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ChatMessage> chatMessages = new ArrayList<>();
+
     // 현재 참여자 수 변경
     public void updateCurrentParticipants(Integer currentParticipants) {
         this.currentParticipants = currentParticipants;
