@@ -27,14 +27,14 @@ public class InitialDataLoader implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     @Override
     public void run(String... args) throws Exception {
-        if(memberRepository.findByEmail("adminEmail").isPresent()){
+        if(memberRepository.findByEmail(adminEmail).isPresent()){
             return;
         }
         Member member = Member.builder()
-                .name("adminName")
-                .email("adminEmail")
+                .name(adminName)
+                .email(adminEmail)
                 .role(Role.ADMIN)
-                .password(passwordEncoder.encode("adminPassword"))
+                .password(passwordEncoder.encode(adminPassword))
                 .build();
         memberRepository.save(member);
     }
