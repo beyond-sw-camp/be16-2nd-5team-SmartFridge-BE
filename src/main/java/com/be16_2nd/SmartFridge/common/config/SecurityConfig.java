@@ -40,7 +40,7 @@ public class SecurityConfig {
                         e.authenticationEntryPoint(jwtAuthenticationHandler) // 401의 경우
                                 .accessDeniedHandler(jwtAuthorizationHandler) // 403의 경우
                 )
-                .authorizeHttpRequests(a->a.requestMatchers("/api/v1/email/send", "/api/v1/email/verify", "/member/forgot-password/send-code", "/member/forgot-password/verify-code","/member/forgot-password/updatepw", "/member/create", "/member/doLogin", "/member/google/doLogin", "/member/kakao/doLogin", "/member/naver/doLogin", "connect/chat/**","/api/enums","/member/refresh-at", "/health").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(a->a.requestMatchers("/api/v1/email/send", "/api/v1/email/verify", "/member/forgot-password/send-code", "/member/forgot-password/verify-code","/member/forgot-password/updatepw", "/member/create", "/member/doLogin", "/member/google/doLogin", "/member/kakao/doLogin", "/member/naver/doLogin", "/connect/chat/**","/api/enums","/member/refresh-at", "/health").permitAll().anyRequest().authenticated())
 //                oauth로그인이 성공했을 경우 실행할 클래스 정의
 //                .oauth2Login(o->o.successHandler(googleOauth2LoginSuccess))
                 .build();
