@@ -48,11 +48,7 @@ spring:
     multipart:
       max-file-size: 1000MB
       max-request-size: 1000MB
-app:
-  admin:
-    name: ${ADMIN_NAME}
-    email: ${ADMIN_EMAIL}
-    password: ${ADMIN_PASSWORD}
+
 cloud:
   aws:
     credentials:

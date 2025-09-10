@@ -40,6 +40,7 @@ out/
 
 logs
 
+src/main/java/com/be16_2nd/SmartFridge/common/service/InitialDataLoader.java
 
 .gitmessage.txt
 

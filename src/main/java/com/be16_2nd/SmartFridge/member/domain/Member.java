@@ -1,21 +1,11 @@
 package com.be16_2nd.SmartFridge.member.domain;
 
-import com.be16_2nd.SmartFridge.chat.domain.ChatParticipant;
-import com.be16_2nd.SmartFridge.chat.domain.IsRead;
-import com.be16_2nd.SmartFridge.chat.domain.ManagerChatRoom;
 import com.be16_2nd.SmartFridge.common.domain.BaseTimeEntity;
-import com.be16_2nd.SmartFridge.food.domain.Food;
-import com.be16_2nd.SmartFridge.fridge.domain.FridgeMember;
-import com.be16_2nd.SmartFridge.inquiry.domain.Inquiry;
-import com.be16_2nd.SmartFridge.notification.domain.NotificationSetting;
-import com.be16_2nd.SmartFridge.post.domain.Post;
-import com.be16_2nd.SmartFridge.post.domain.PostComment;
-import com.be16_2nd.SmartFridge.post.domain.PostLike;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -46,47 +36,6 @@ public class Member extends BaseTimeEntity {
     private String socialId;
 
     private String profileImage;
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Food> foods = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<FridgeMember> fridgeMembers = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Inquiry> inquiries = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<NotificationSetting> notificationSettings = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Post> posts = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<PostComment> postComments = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<PostLike> postLikes = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ChatParticipant> chatParticipants = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<IsRead> isReads = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ManagerChatRoom> managerChatRooms = new ArrayList<>();
-
 
     public void updatePw(String password) {
         this.password = password;
