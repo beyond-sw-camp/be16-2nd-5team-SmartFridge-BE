@@ -23,7 +23,7 @@ public class StompWebSocket implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/connect/chat")
-                .setAllowedOrigins("https://www.smartfridge.cloud")
+                .setAllowedOrigins("https://www.smartfridge.cloud", "http://localhost:3000")
                 .withSockJS();
     }
 
