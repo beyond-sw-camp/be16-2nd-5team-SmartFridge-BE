@@ -1,9 +1,6 @@
 package com.be16_2nd.SmartFridge.member.domain;
 
-import com.be16_2nd.SmartFridge.chat.domain.ChatMessage;
-import com.be16_2nd.SmartFridge.chat.domain.ChatParticipant;
-import com.be16_2nd.SmartFridge.chat.domain.IsRead;
-import com.be16_2nd.SmartFridge.chat.domain.ManagerChatRoom;
+import com.be16_2nd.SmartFridge.chat.domain.*;
 import com.be16_2nd.SmartFridge.common.domain.BaseTimeEntity;
 import com.be16_2nd.SmartFridge.food.domain.Food;
 import com.be16_2nd.SmartFridge.fridge.domain.FridgeMember;
@@ -96,6 +93,10 @@ public class Member extends BaseTimeEntity {
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ChatMessage> chatMessages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<PurchaseChatRoom> purchaseChatRooms = new ArrayList<>();
 
 
     public void updatePw(String password) {
