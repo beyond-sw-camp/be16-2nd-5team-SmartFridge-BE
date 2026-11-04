@@ -8,8 +8,8 @@ import com.be16_2nd.SmartFridge.chat.service.ChatService;
 import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.notification.service.NotificationPublisher;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -25,7 +25,7 @@ public class StompController {
 
     private final NotificationPublisher notificationPublisher;
     @MessageMapping("MANAGER/{roomId}")
-    public void sendMessageToManager(@DestinationVariable Long roomId, ChatMessageDto chatMessageReqDto) throws JsonProcessingException {
+    public void sendMessageToManager(@DestinationVariable Long roomId, ChatMessageDto chatMessageReqDto) throws JacksonException {
         chatMessageReqDto.setChatRoomType("MANAGER");
         chatMessageReqDto.setRoomId(roomId);
         ChatMessage chatMessage = chatService.saveMessage(roomId, chatMessageReqDto);
@@ -44,7 +44,7 @@ public class StompController {
         );
     }
     @MessageMapping("PURCHASE/{roomId}")
-    public void sendMessageToGroup(@DestinationVariable Long roomId, ChatMessageDto chatMessageReqDto) throws JsonProcessingException {
+    public void sendMessageToGroup(@DestinationVariable Long roomId, ChatMessageDto chatMessageReqDto) throws JacksonException {
         chatMessageReqDto.setChatRoomType("PURCHASE");
         chatMessageReqDto.setRoomId(roomId);
         ChatMessage chatMessage = chatService.saveMessage(roomId, chatMessageReqDto);

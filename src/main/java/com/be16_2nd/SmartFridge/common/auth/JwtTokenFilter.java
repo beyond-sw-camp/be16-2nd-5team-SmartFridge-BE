@@ -2,6 +2,9 @@ package com.be16_2nd.SmartFridge.common.auth;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.filter.GenericFilterBean;
 
+import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +33,13 @@ import java.util.List;
 public class JwtTokenFilter extends GenericFilterBean {
     @Value("${jwt.secretKeyAt}")
     private String secretKey;
+
+    private SecretKey signingKey;
+
+    @PostConstruct
+    public void init() {
+        signingKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -40,11 +51,11 @@ public class JwtTokenFilter extends GenericFilterBean {
                 return;
             }
             String token = bearerToken.substring(7);
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(secretKey)
+            Claims claims = Jwts.parser()
+                    .verifyWith(signingKey)
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseSignedClaims(token)
+                    .getPayload();
             List<GrantedAuthority> authorities = new ArrayList<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_"+claims.get("role")));
             Authentication authentication = new UsernamePasswordAuthenticationToken(claims.getSubject(), "", authorities);

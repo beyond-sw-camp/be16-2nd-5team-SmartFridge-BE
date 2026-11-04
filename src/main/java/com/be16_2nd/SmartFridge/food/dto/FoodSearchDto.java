@@ -15,5 +15,6 @@ public class FoodSearchDto {
     private Category category;
     private FoodFilterType filterType;
     private Boolean isTemp;
+    @Builder.Default
     private Boolean viewAll = false;
 }

@@ -21,5 +21,6 @@ public class PostCategory {
     private String category;
 
     @OneToMany(mappedBy = "category")
+    @Builder.Default
     private List<Post> posts = new ArrayList<>();
 }

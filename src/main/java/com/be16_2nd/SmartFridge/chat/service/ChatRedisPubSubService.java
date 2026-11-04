@@ -1,8 +1,8 @@
 package com.be16_2nd.SmartFridge.chat.service;
 
 import com.be16_2nd.SmartFridge.chat.dto.ChatMessageDto;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
@@ -34,7 +34,7 @@ public class ChatRedisPubSubService implements MessageListener {
             ChatMessageDto chatMessageDto = objectMapper.readValue(payload, ChatMessageDto.class);
             String destination = "/topic/chat/"+ chatMessageDto.getChatRoomType().toString()+"/"+ chatMessageDto.getRoomId();
             messageTemplate.convertAndSend(destination, chatMessageDto);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
     }

@@ -1,8 +1,8 @@
 package com.be16_2nd.SmartFridge.notification.service;
 
 import com.be16_2nd.SmartFridge.common.dto.SseMessageDTO;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,7 +35,7 @@ public class NotificationPublisher {
             data = objectMapper.writeValueAsString(sseMessageDTO);
             log.info("Redis 채널로 알림 발행. 수신자: {}", receiverEmail);
             redisTemplate.convertAndSend("sse-channel", data);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
     }
