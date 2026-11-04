@@ -32,19 +32,18 @@ public class Member extends BaseTimeEntity {
     private String name;
     @Column(length = 50, unique = true)
     private String email;
+    // 관리자 계정만 사용 (일반 회원은 소셜 로그인 전용이라 null)
     private String password;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private Role role = Role.USER;
 
-    @Enumerated(EnumType.STRING)
-    @Builder.Default
-    private SocialType socialType = SocialType.LOCAL;
-
-    private String socialId;
-
     private String profileImage;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<SocialAccount> socialAccounts = new ArrayList<>();
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -99,8 +98,12 @@ public class Member extends BaseTimeEntity {
     private List<PurchaseChatRoom> purchaseChatRooms = new ArrayList<>();
 
 
-    public void updatePw(String password) {
-        this.password = password;
+    public void linkSocialAccount(SocialType socialType, String socialId) {
+        this.socialAccounts.add(SocialAccount.builder()
+                .member(this)
+                .socialType(socialType)
+                .socialId(socialId)
+                .build());
     }
 
     public void updateName(String name){

@@ -2,8 +2,6 @@ package com.be16_2nd.SmartFridge.member.controller;
 
 import com.be16_2nd.SmartFridge.common.auth.JwtTokenProvider;
 import com.be16_2nd.SmartFridge.common.dto.CommonDto;
-import com.be16_2nd.SmartFridge.email.dto.EmailDto;
-import com.be16_2nd.SmartFridge.email.service.EmailService;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.domain.SocialType;
 import com.be16_2nd.SmartFridge.member.dto.*;
@@ -11,7 +9,6 @@ import com.be16_2nd.SmartFridge.member.service.GoogleService;
 import com.be16_2nd.SmartFridge.member.service.KakaoService;
 import com.be16_2nd.SmartFridge.member.service.MemberService;
 import com.be16_2nd.SmartFridge.member.service.NaverService;
-import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,8 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,34 +26,12 @@ public class MemberController {
     private final GoogleService googleService;
     private final KakaoService kakaoService;
     private final NaverService naverService;
-    private final EmailService emailService;
 
-    @PostMapping("/create")
-    public ResponseEntity<?> save(@RequestBody @Valid MemberCreateDto memberCreateDto){
-        return new ResponseEntity<>(
-                CommonDto.builder()
-                        .result(memberService.save(memberCreateDto))
-                        .status_code(HttpStatus.CREATED.value())
-                        .status_message("회원가입을 축하합니다!")
-                        .build(),HttpStatus.CREATED);
-    }
-
+    // 관리자 전용 일반 로그인 (일반 회원은 소셜 로그인만 사용)
     @PostMapping("/doLogin")
     public ResponseEntity<?> doLogin(@RequestBody LoginReqDto loginReqDto){
-        Member member = memberService.doLogin(loginReqDto);
-        String accessToken = jwtTokenProvider.createAtToken(member);
-        String refreshToken = jwtTokenProvider.createRtToken(member);
-
-        LoginResDto loginResDto = LoginResDto.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
-        return new ResponseEntity<>(
-                CommonDto.builder()
-                        .result(loginResDto)
-                        .status_code(HttpStatus.OK.value())
-                        .status_message("로그인 성공")
-                        .build(), HttpStatus.OK);
+        Member member = memberService.doAdminLogin(loginReqDto);
+        return loginResponse(member, "로그인 성공");
     }
 
     @GetMapping("/info")
@@ -70,88 +43,63 @@ public class MemberController {
                         .status_message("사용자 정보 조회 성공")
                         .build(), HttpStatus.OK);
     }
-//    google로그인 메서드
+    //    google로그인 메서드
     @PostMapping("/google/doLogin")
     public ResponseEntity<?> googleLogin(@RequestBody RedirectDto redirectDto){
-//        accessToken 발급
         AccessTokenDto accessTokenDto = googleService.getAccessToken(redirectDto.getCode());
-//        사용자 정보 얻기
-        GoogleProfileDto googleProfileDto = googleService.getGoogleProfile(accessTokenDto.getAccess_token());
-//        회원가입 되어있지 않다면 회원 가입
-        Member originalMember = memberService.getMemberBySocialId(googleProfileDto.getSub());
-        if (originalMember == null){
-            originalMember = memberService.createOauth(googleProfileDto.getSub(),
-                    googleProfileDto.getEmail(),
-                    googleProfileDto.getName(),
-                    googleProfileDto.getPicture(),
-                    SocialType.GOOGLE);
-        }
-//        회원 가입이 되어있는 회원이라면 토큰 발급
-        String jwtToken = jwtTokenProvider.createSocialToken(originalMember.getEmail(),
-                originalMember.getRole().toString());
-
-        Map<String, Object> loginInfo = new HashMap<>();
-        loginInfo.put("id", originalMember.getId());
-        loginInfo.put("token", jwtToken);
-        return new ResponseEntity<>(
-                CommonDto.builder()
-                        .result(loginInfo)
-                        .status_code(HttpStatus.OK.value())
-                        .status_message("구글 로그인 성공")
-                        .build(), HttpStatus.OK);
+        GoogleProfileDto profile = googleService.getGoogleProfile(accessTokenDto.getAccess_token());
+        Member member = memberService.socialLogin(SocialType.GOOGLE,
+                profile.getSub(),
+                profile.getEmail(),
+                Boolean.TRUE.equals(profile.getEmail_verified()),
+                profile.getName(),
+                profile.getPicture());
+        return loginResponse(member, "구글 로그인 성공");
     }
 
     //    kakao로그인 메서드
     @PostMapping("/kakao/doLogin")
     public ResponseEntity<?> kakaoLogin(@RequestBody RedirectDto redirectDto){
         AccessTokenDto accessTokenDto = kakaoService.getAccessToken(redirectDto.getCode());
-        KakaoProfileDto kakaoProfileDto = kakaoService.getKakaoProfile(accessTokenDto.getAccess_token());
-        Member originalMember = memberService.getMemberBySocialId(kakaoProfileDto.getId());
-        if (originalMember == null){
-            originalMember = memberService.createOauth(kakaoProfileDto.getId(),
-                    kakaoProfileDto.getKakao_account().getEmail(),
-                    kakaoProfileDto.getKakao_account().getProfile().getNickname(),
-                    kakaoProfileDto.getKakao_account().getProfile().getProfile_image_url(),
-                    SocialType.KAKAO);
-        }
-        String jwtToken = jwtTokenProvider.createSocialToken(originalMember.getEmail(),
-                originalMember.getRole().toString());
-
-        Map<String, Object> loginInfo = new HashMap<>();
-        loginInfo.put("id", originalMember.getId());
-        loginInfo.put("token", jwtToken);
-        return new ResponseEntity<>(
-                CommonDto.builder()
-                        .result(loginInfo)
-                        .status_code(HttpStatus.OK.value())
-                        .status_message("카카오 로그인 성공")
-                        .build(), HttpStatus.OK);
+        KakaoProfileDto profile = kakaoService.getKakaoProfile(accessTokenDto.getAccess_token());
+        KakaoProfileDto.KakaoAccount account = profile.getKakao_account();
+        KakaoProfileDto.Profile kakaoProfile = account != null ? account.getProfile() : null;
+        Member member = memberService.socialLogin(SocialType.KAKAO,
+                profile.getId(),
+                account != null ? account.getEmail() : null,
+                account != null && Boolean.TRUE.equals(account.getIs_email_valid())
+                        && Boolean.TRUE.equals(account.getIs_email_verified()),
+                kakaoProfile != null ? kakaoProfile.getNickname() : null,
+                kakaoProfile != null ? kakaoProfile.getProfile_image_url() : null);
+        return loginResponse(member, "카카오 로그인 성공");
     }
 
     //    naver로그인 메서드
     @PostMapping("/naver/doLogin")
     public ResponseEntity<?> naverLogin(@RequestBody NaverRedirectDto naverRedirectDto){
         AccessTokenDto accessTokenDto = naverService.getAccessToken(naverRedirectDto.getCode(), naverRedirectDto.getState());
-        NaverProfileDto naverProfileDto = naverService.getNaverProfile(accessTokenDto.getAccess_token());
-        Member originalMember = memberService.getMemberBySocialId(naverProfileDto.getResponse().getId());
-        if (originalMember == null){
-            originalMember = memberService.createOauth(naverProfileDto.getResponse().getId(),
-                    naverProfileDto.getResponse().getEmail(),
-                    naverProfileDto.getResponse().getName(),
-                    naverProfileDto.getResponse().getProfile_image(),
-                    SocialType.NAVER);
-        }
-        String jwtToken = jwtTokenProvider.createSocialToken(originalMember.getEmail(),
-                originalMember.getRole().toString());
+        NaverProfileDto.Response profile = naverService.getNaverProfile(accessTokenDto.getAccess_token()).getResponse();
+        // 네이버는 인증 여부 필드를 주지 않음. 네이버가 확인한 계정 이메일로 보고 연결을 허용
+        Member member = memberService.socialLogin(SocialType.NAVER,
+                profile.getId(),
+                profile.getEmail(),
+                true,
+                profile.getName(),
+                profile.getProfile_image());
+        return loginResponse(member, "네이버 로그인 성공");
+    }
 
-        Map<String, Object> loginInfo = new HashMap<>();
-        loginInfo.put("id", originalMember.getId());
-        loginInfo.put("token", jwtToken);
+    // 일반/소셜 로그인 공통: AT + RT 발급
+    private ResponseEntity<?> loginResponse(Member member, String message){
+        LoginResDto loginResDto = LoginResDto.builder()
+                .accessToken(jwtTokenProvider.createAtToken(member))
+                .refreshToken(jwtTokenProvider.createRtToken(member))
+                .build();
         return new ResponseEntity<>(
                 CommonDto.builder()
-                        .result(loginInfo)
+                        .result(loginResDto)
                         .status_code(HttpStatus.OK.value())
-                        .status_message("네이버 로그인 성공")
+                        .status_message(message)
                         .build(), HttpStatus.OK);
     }
 
@@ -175,50 +123,6 @@ public class MemberController {
                         .status_message("회원탈퇴가 성공적으로 되었습니다. \n"  +
                                 "그동안 저희 Smart Fridge를 이용해주셔서 감사합니다.")
                         .build(), HttpStatus.OK);
-    }
-
-//    비밀번호 재설정 이메일 전송
-    @PostMapping("/forgot-password/send-code")
-    public ResponseEntity<?> mailSend(@RequestBody EmailDto emailDto) throws MessagingException {
-        emailService.sendEmail(emailDto.getMail());
-        return new ResponseEntity<>(
-                CommonDto.builder()
-                        .result("OK")
-                        .status_code(HttpStatus.OK.value())
-                        .status_message("인증코드가 발송되었습니다.")
-                        .build(),HttpStatus.OK);
-    }
-
-//    비밀번호 재설정 이메일 검증
-    @PostMapping("/forgot-password/verify-code")
-    public ResponseEntity<?> verify(@RequestBody EmailDto emailDto) {
-
-        boolean isVerify = emailService.verifyEmailCode(emailDto.getMail(), emailDto.getVerifyCode());
-        if (isVerify){
-            return new ResponseEntity<>(
-                    CommonDto.builder()
-                            .result("VERIFIED")
-                            .status_code(HttpStatus.OK.value())
-                            .status_message("이메일 인증이 완료되었습니다.")
-                            .build(),HttpStatus.OK);
-        }else {
-            return new ResponseEntity<>(
-                    CommonDto.builder()
-                            .result("UNVERIFIED")
-                            .status_code(HttpStatus.BAD_REQUEST.value())
-                            .status_message("이메일 인증 실패하셨습니다.")
-                            .build(),HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @PutMapping("/forgot-password/updatepw")
-    public ResponseEntity<?> updatePw(@RequestBody UpdatePwDto updatePwDto){
-        return new ResponseEntity<>(
-                CommonDto.builder()
-                        .result(memberService.updatePw(updatePwDto))
-                        .status_code(HttpStatus.OK.value())
-                        .status_message("비밀번호가 성공적으로 변경되었습니다.")
-                        .build(),HttpStatus.OK);
     }
 
     @GetMapping("/myposts")

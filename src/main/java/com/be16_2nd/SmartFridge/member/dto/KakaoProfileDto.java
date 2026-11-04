@@ -21,6 +21,8 @@ public class KakaoProfileDto {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class KakaoAccount{
         private String email;
+        private Boolean is_email_valid;
+        private Boolean is_email_verified;
         private Profile profile;
     }
 
