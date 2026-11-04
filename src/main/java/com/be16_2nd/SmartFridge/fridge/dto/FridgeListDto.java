@@ -22,14 +22,14 @@ public class FridgeListDto {
     private String inviteLink;
     private LocalDateTime createdTime;
 
-    public static FridgeListDto from(FridgeMember fridgeMember) {
+    public static FridgeListDto from(FridgeMember fridgeMember, String inviteLink) {
         Fridge fridge = fridgeMember.getFridge();
         return FridgeListDto.builder()
                 .fridgeId(fridge.getId())
                 .fridgeName(fridge.getFridgeName())
                 .description(fridge.getDescription())
                 .type(fridgeMember.getType())
-                .inviteLink(fridge.getInviteCode())
+                .inviteLink(inviteLink)
                 .createdTime(fridge.getCreatedTime())
                 .build();
     }
