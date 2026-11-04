@@ -48,18 +48,6 @@ public class JwtTokenProvider {
 
     }
 
-    public String createSocialToken(String email, String role){
-        Date now = new Date();
-        String token = Jwts.builder()
-                .subject(email)
-                .claim("role", role)
-                .issuedAt(now)
-                .expiration(new Date(now.getTime()+expiration*60*1000))
-                .signWith(secret_at_key)
-                .compact();
-        return token;
-    }
-
     public String createAtToken(Member member){
         String email = member.getEmail();
         String role = member.getRole().toString();

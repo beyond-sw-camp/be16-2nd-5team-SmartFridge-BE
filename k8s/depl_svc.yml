@@ -37,16 +37,6 @@ spec:
             secretKeyRef:
               name: smartfridge-secrets
               key: DB_PW
-        - name: SMTP_EMAIL
-          valueFrom:
-            secretKeyRef:
-              name: smartfridge-secrets
-              key: SMTP_EMAIL
-        - name: SMTP_PW
-          valueFrom:
-            secretKeyRef:
-              name: smartfridge-secrets
-              key: SMTP_PW
         - name: AWS_KEY
           valueFrom:
             secretKeyRef:

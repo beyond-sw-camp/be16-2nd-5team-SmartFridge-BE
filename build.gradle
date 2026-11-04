@@ -45,8 +45,6 @@ dependencies {
 	//채팅 관련
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework.boot:spring-boot-starter-amqp'
-	//email인증 관련
-	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'ognl:ognl:3.3.4'
 }
 
