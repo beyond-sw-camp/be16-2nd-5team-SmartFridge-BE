@@ -3,18 +3,16 @@ package com.be16_2nd.SmartFridge.common.auth;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.spec.SecretKeySpec;
-import java.security.Key;
-import java.security.Signature;
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Component
@@ -32,8 +30,8 @@ public class JwtTokenProvider {
     @Value("${jwt.secretKeyRt}")
     private String secretKeyRt;
 
-    private Key secret_at_key;
-    private Key secret_rt_key;
+    private SecretKey secret_at_key;
+    private SecretKey secret_rt_key;
 
     private final MemberRepository memberRepository;
     private final RedisTemplate<String, String> redisTemplate;
@@ -45,20 +43,18 @@ public class JwtTokenProvider {
 
     @PostConstruct
     public void init(){
-        secret_at_key = new SecretKeySpec(java.util.Base64.getDecoder().decode(secretKeyAt), SignatureAlgorithm.HS256.getJcaName());
-        secret_rt_key = new SecretKeySpec(java.util.Base64.getDecoder().decode(secretKeyRt)
-                , SignatureAlgorithm.HS512.getJcaName());
+        secret_at_key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKeyAt));
+        secret_rt_key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKeyRt));
 
     }
 
     public String createSocialToken(String email, String role){
-        Claims claims = Jwts.claims().setSubject(email);
-        claims.put("role", role);
         Date now = new Date();
         String token = Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime()+expiration*60*1000))
+                .subject(email)
+                .claim("role", role)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime()+expiration*60*1000))
                 .signWith(secret_at_key)
                 .compact();
         return token;
@@ -67,13 +63,12 @@ public class JwtTokenProvider {
     public String createAtToken(Member member){
         String email = member.getEmail();
         String role = member.getRole().toString();
-        Claims claims = Jwts.claims().setSubject(email);
-        claims.put("role", role);
         Date now = new Date();
         String token = Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime()+expiration*60*1000))
+                .subject(email)
+                .claim("role", role)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime()+expiration*60*1000))
                 .signWith(secret_at_key)
                 .compact();
         return token;
@@ -85,14 +80,12 @@ public class JwtTokenProvider {
         String role = member.getRole().toString();
         init();
 
-        Claims claims = Jwts.claims().setSubject(email);
-        claims.put("role", role);
-
         Date now = new Date();
-        String refreshToken =Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + expirationRt * 90 * 1000L))
+        String refreshToken = Jwts.builder()
+                .subject(email)
+                .claim("role", role)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + expirationRt * 90 * 1000L))
                 .signWith(secret_rt_key)
                 .compact();
 
@@ -106,11 +99,11 @@ public class JwtTokenProvider {
 
     public Member validateRt(String refreshToken) {
         // rt 그 자체를 검증
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(secretKeyRt)
+        Claims claims = Jwts.parser()
+                .verifyWith(secret_rt_key)
                 .build()
-                .parseClaimsJws(refreshToken)
-                .getBody();
+                .parseSignedClaims(refreshToken)
+                .getPayload();
 
         String email = claims.getSubject();
         Member member = memberRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("member is not found"));
