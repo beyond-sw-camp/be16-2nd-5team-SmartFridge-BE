@@ -6,7 +6,6 @@ import com.be16_2nd.SmartFridge.chat.dto.ChatMessageEmailDto;
 import com.be16_2nd.SmartFridge.chat.service.ChatRedisPubSubService;
 import com.be16_2nd.SmartFridge.chat.service.ChatService;
 import com.be16_2nd.SmartFridge.notification.domain.NotificationType;
-import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.notification.service.NotificationPublisher;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -29,26 +28,28 @@ public class StompController {
         chatMessageReqDto.setChatRoomType("MANAGER");
         chatMessageReqDto.setRoomId(roomId);
         ChatMessage chatMessage = chatService.saveMessage(roomId, chatMessageReqDto);
-        ChatMessageDto chatMessageDto = ChatMessageDto.fromEntityManagerChat(chatMessage);
+        ChatMessageDto chatMessageDto = ChatMessageDto.fromEntity(chatMessage);
         ObjectMapper objectMapper = new ObjectMapper();
         String message = objectMapper.writeValueAsString(chatMessageDto);
         chatRedisPubSubService.publish("chat-channel", message);
 
         ChatMessageEmailDto result = chatService.saveMessageWithEmails(chatMessage);
 
-        notificationPublisher.publish(
-                chatMessage.getManagerChatRoom().getFridge().getId(),
-                result.receiverEmailList().get(0),
-                NotificationType.MANAGER_CHAT.getDescription(),
-                NotificationType.MANAGER_CHAT.name()
-        );
+        for (String receiverEmail : result.receiverEmailList()) {
+            notificationPublisher.publish(
+                    chatMessage.getChatRoom().getFridge().getId(),
+                    receiverEmail,
+                    NotificationType.MANAGER_CHAT.getDescription(),
+                    NotificationType.MANAGER_CHAT.name()
+            );
+        }
     }
     @MessageMapping("PURCHASE/{roomId}")
     public void sendMessageToGroup(@DestinationVariable Long roomId, ChatMessageDto chatMessageReqDto) throws JacksonException {
         chatMessageReqDto.setChatRoomType("PURCHASE");
         chatMessageReqDto.setRoomId(roomId);
         ChatMessage chatMessage = chatService.saveMessage(roomId, chatMessageReqDto);
-        ChatMessageDto chatMessageDto = ChatMessageDto.fromEntityPurchaseChat(chatMessage);
+        ChatMessageDto chatMessageDto = ChatMessageDto.fromEntity(chatMessage);
         ObjectMapper objectMapper = new ObjectMapper();
         String message = objectMapper.writeValueAsString(chatMessageDto);
         chatRedisPubSubService.publish("chat-channel", message);
@@ -56,7 +57,7 @@ public class StompController {
 
         for (String receiverEmail : result.receiverEmailList()) {
             notificationPublisher.publish(
-                    chatMessage.getPurchaseChatRoom().getFridge().getId()
+                    chatMessage.getChatRoom().getFridge().getId()
                     , receiverEmail
                     , NotificationType.GROUP_CHAT.getDescription()
                     , NotificationType.GROUP_CHAT.name()

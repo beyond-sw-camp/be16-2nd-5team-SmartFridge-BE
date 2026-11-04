@@ -1,5 +1,6 @@
 package com.be16_2nd.SmartFridge.chat.config;
 
+import com.be16_2nd.SmartFridge.chat.domain.ChatRoomType;
 import com.be16_2nd.SmartFridge.chat.service.ManagerChatRoomLifecycle;
 import com.be16_2nd.SmartFridge.chat.service.ChatService;
 import com.be16_2nd.SmartFridge.chat.service.Validator.ChatRoomParticipantValidator;
@@ -57,7 +58,7 @@ public class StompHandler implements ChannelInterceptor {
             // 1대1 채팅방
             if (roomType.equals("MANAGER")) {
                 // 채팅방 참여자 확인
-                chatRoomParticipantValidator.validateManagerRoomParticipant(email, roomId);
+                chatRoomParticipantValidator.validateParticipant(email, roomId, ChatRoomType.MANAGER);
                 // 현재 채팅방 참여자에 추가
                 ManagerChatRoomLifecycle.ManagerRoomParticipants
                         .computeIfAbsent(roomId, k -> new HashSet<>())
@@ -66,7 +67,7 @@ public class StompHandler implements ChannelInterceptor {
             // 공동 구매 채팅방
             else {
                 // 채팅방 참여자 확인
-                chatRoomParticipantValidator.validatePurchaseRoomParticipant(email, roomId);
+                chatRoomParticipantValidator.validateParticipant(email, roomId, ChatRoomType.PURCHASE);
                 // 현재 채팅방 참여자에 추가
                 ManagerChatRoomLifecycle.PurchaseRoomParticipants
                         .computeIfAbsent(roomId, k -> new HashSet<>())

@@ -1,6 +1,5 @@
 package com.be16_2nd.SmartFridge.chat.domain;
 
-import com.be16_2nd.SmartFridge.fridge.domain.Fridge;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -10,22 +9,25 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
+/*
+ * 공동구매 게시글 (채팅방과 1:1)
+ * - 냉장고는 chatRoom.fridge 로 접근
+ * - 현재 참여자 수는 chatRoom.participants 로 계산
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Builder
 @Entity
-public class PurchaseChatRoom {
+public class PurchasePost {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fridge_id", nullable = false)
-    private Fridge fridge;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chat_room_id", nullable = false, unique = true)
+    private ChatRoom chatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false)
@@ -34,10 +36,11 @@ public class PurchaseChatRoom {
     @Column(nullable = false)
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String contents;
 
-    @Column(nullable = false)
-    private Integer currentParticipants;
+    private String productUrl;
+
     @Column(nullable = false)
     private Integer maxParticipants;
 
@@ -46,42 +49,27 @@ public class PurchaseChatRoom {
     @Enumerated(EnumType.STRING)
     private JoinStatus joinStatus = JoinStatus.OPEN;
 
-    private String productUrl;
-
     @Column(nullable = false)
     @Builder.Default
     private Boolean isActive = true;
 
     @CreationTimestamp
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdTime;
 
-    private LocalDateTime lastMessageAt;
-    
-    // 양방향매핑
-    @OneToMany(mappedBy = "purchaseChatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ChatParticipant> participants = new ArrayList<>();
-
-    @OneToMany(mappedBy = "purchaseChatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ChatMessage> chatMessages = new ArrayList<>();
-
-    // 현재 참여자 수 변경
-    public void updateCurrentParticipants(Integer currentParticipants) {
-        this.currentParticipants = currentParticipants;
+    public int getCurrentParticipants() {
+        return chatRoom.getParticipants().size();
     }
 
-    // 구매 모집 상태 변경
+    public boolean isFull() {
+        return getCurrentParticipants() >= maxParticipants;
+    }
+
     public void updateJoinStatus(JoinStatus joinStatus) {
         this.joinStatus = joinStatus;
     }
 
     public void updateIsActive(Boolean isActive) {
         this.isActive = isActive;
-    }
-
-    public void updateLastMessageAt(LocalDateTime lastMessageAt) {
-        this.lastMessageAt = lastMessageAt;
     }
 }

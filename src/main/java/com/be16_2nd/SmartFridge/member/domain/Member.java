@@ -77,14 +77,6 @@ public class Member extends BaseTimeEntity {
     @Builder.Default
     private List<ChatParticipant> chatParticipants = new ArrayList<>();
 
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<IsRead> isReads = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ManagerChatRoom> managerChatRooms = new ArrayList<>();
-
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Notification> notifications = new ArrayList<>();
@@ -95,7 +87,7 @@ public class Member extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<PurchaseChatRoom> purchaseChatRooms = new ArrayList<>();
+    private List<PurchasePost> purchasePosts = new ArrayList<>();
 
 
     public void linkSocialAccount(SocialType socialType, String socialId) {
