@@ -4,6 +4,7 @@ import com.be16_2nd.SmartFridge.fridge.domain.Type;
 import com.be16_2nd.SmartFridge.inquiry.domain.Inquiry;
 import com.be16_2nd.SmartFridge.inquiry.domain.InquiryStatus;
 import com.be16_2nd.SmartFridge.inquiry.dto.InquiryResDto;
+import com.be16_2nd.SmartFridge.inquiry.exception.InquiryConflictException;
 import com.be16_2nd.SmartFridge.inquiry.repository.InquiryRepository;
 import com.be16_2nd.SmartFridge.inquiryComment.domain.InquiryComment;
 import com.be16_2nd.SmartFridge.inquiryComment.dto.InquiryCommentCreateDto;
@@ -21,6 +22,7 @@ import com.be16_2nd.SmartFridge.notification.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,16 +75,21 @@ public class AdminService {
     }
 
     public InquiryCommentResDto replyInquiry(InquiryCommentCreateDto inquiryCommentCreateDto, Long inquiryId) {
-        Inquiry inquiry = inquiryRepository.findById(inquiryId)
+        Inquiry inquiry = inquiryRepository.findByIdForUpdate(inquiryId)
                 .orElseThrow(() -> new EntityNotFoundException("등록되지 않은 문의입니다."));
+        inquiry.validateReplyable();
         Member sender = memberRepository.findByEmail("admin@naver.com")
                 .orElseThrow(() -> new EntityNotFoundException("등록되지 않은 관리자입니다."));
         String email = inquiry.getMember().getEmail();
         Member receiver = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("등록되지 않은 회원입니다."));
-        InquiryComment inquiryComment = inquiryCommentRepository.save(inquiryCommentCreateDto.toEntity(inquiryCommentCreateDto, inquiry));
-        inquiry.setStatus(InquiryStatus.COMPLETED);
-        inquiryRepository.save(inquiry);
+        InquiryComment inquiryComment;
+        try {
+            inquiryComment = inquiryCommentRepository.saveAndFlush(inquiryCommentCreateDto.toEntity(inquiryCommentCreateDto, inquiry));
+        } catch (DataIntegrityViolationException e) {
+            throw new InquiryConflictException("이미 답변이 등록된 문의입니다.");
+        }
+        inquiry.completeWithReply(inquiryComment);
         // 알림 발송 + db 저장
         notificationService.create(sender, receiver, NotificationType.ADMIN_REPLY, inquiryComment);
         return InquiryCommentResDto.builder()
@@ -101,8 +108,7 @@ public class AdminService {
     public InquiryResDto updateInquiry(Long inquiryId, InquiryStatus status){
         Inquiry inquiry = inquiryRepository.findAllByInquiryId(inquiryId)
                 .orElseThrow(()->new EntityNotFoundException("존재하지 않는 문의글입니다."));
-        inquiry.setStatus(status);
-        inquiryRepository.save(inquiry);
+        inquiry.changeStatus(status);
         return InquiryResDto.fromEntity(inquiry);
     }
 

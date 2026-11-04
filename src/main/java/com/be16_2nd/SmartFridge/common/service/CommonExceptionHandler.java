@@ -1,6 +1,7 @@
 package com.be16_2nd.SmartFridge.common.service;
 
 import com.be16_2nd.SmartFridge.common.dto.CommonErrorDto;
+import com.be16_2nd.SmartFridge.inquiry.exception.InquiryConflictException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -45,6 +46,12 @@ public class CommonExceptionHandler {
     public ResponseEntity<?> authorizationServiceException(AuthorizationServiceException e){
         log.error(e.getMessage());
         return new ResponseEntity<>(new CommonErrorDto(HttpStatus.UNAUTHORIZED.value(), e.getMessage()), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(InquiryConflictException.class)
+    public ResponseEntity<?> inquiryConflictException(InquiryConflictException e){
+        log.error(e.getMessage());
+        return new ResponseEntity<>(new CommonErrorDto(HttpStatus.CONFLICT.value(), e.getMessage()), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(Exception.class)
