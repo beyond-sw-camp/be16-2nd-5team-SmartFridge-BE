@@ -2,7 +2,8 @@ package com.be16_2nd.SmartFridge.notification.service;
 
 import com.be16_2nd.SmartFridge.common.dto.SseMessageDTO;
 import com.be16_2nd.SmartFridge.common.service.SseEmitterRegistry;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -46,7 +47,7 @@ public class NotificationSubscriber implements MessageListener {
                 log.info("수신자 {}가 현재 서버에 접속중이 아님.", sseMessageDTO.getReceiverEmail());
             }
 
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             log.error("Redis 메시지 처리 중 오류 발생", e);
         }
     }

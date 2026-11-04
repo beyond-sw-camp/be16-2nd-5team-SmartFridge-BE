@@ -7,8 +7,8 @@ import com.be16_2nd.SmartFridge.post.repository.PostRepository;
 import com.be16_2nd.SmartFridge.common.dto.RabbitMqDto;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.core.Message;
@@ -56,7 +56,7 @@ public class RabbitMqService {
 
     @RabbitListener(queues = "postViewQueue")
     @Transactional
-    public void subscribeViewUpdate(Message message) throws JsonProcessingException {
+    public void subscribeViewUpdate(Message message) throws JacksonException {
         String messageBody = new String(message.getBody());
         ObjectMapper objectMapper = new ObjectMapper();
         RabbitMqDto dto = objectMapper.readValue(messageBody, RabbitMqDto.class);
@@ -65,7 +65,7 @@ public class RabbitMqService {
 
     @RabbitListener(queues = "postLikeQueue")
     @Transactional
-    public void subscribeLikeUpdate(Message message) throws JsonProcessingException {
+    public void subscribeLikeUpdate(Message message) throws JacksonException {
         String messageBody = new String(message.getBody());
         ObjectMapper objectMapper = new ObjectMapper();
         RabbitMqDto dto = objectMapper.readValue(messageBody, RabbitMqDto.class);
