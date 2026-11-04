@@ -25,8 +25,10 @@ public class Post extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
     @Column(nullable = false)
+    @Builder.Default
     private int viewCount = 0;
     @Column(nullable = false)
+    @Builder.Default
     private int commentCount = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -46,9 +48,11 @@ public class Post extends BaseTimeEntity {
     private List<PostComment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<PostLike> likes = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<PostImage> images = new ArrayList<>();
 
     public void updatePost(PostUpdateDto postUpdateDto, PostCategory postCateogory) {

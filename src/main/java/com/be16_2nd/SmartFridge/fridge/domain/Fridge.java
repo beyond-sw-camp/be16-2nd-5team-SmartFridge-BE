@@ -36,18 +36,23 @@ public class Fridge extends BaseTimeEntity {
     List<FridgeMember> fridgeMemberList = new ArrayList<>();
 
     @OneToMany(mappedBy = "fridge", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Food> foods = new ArrayList<>();
 
     @OneToMany(mappedBy = "fridge", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Post> posts = new ArrayList<>();
 
     @OneToMany(mappedBy = "fridge", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<ManagerChatRoom>  managerChatRooms = new ArrayList<>();
 
     @OneToMany(mappedBy = "fridge", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<PurchaseChatRoom>  purchaseChatRooms = new ArrayList<>();
 
     @OneToMany(mappedBy = "fridge", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Notification> notifications = new ArrayList<>();
 
     public void updateFridge(FridgeUpdateDto fridgeUpdateDto) {
