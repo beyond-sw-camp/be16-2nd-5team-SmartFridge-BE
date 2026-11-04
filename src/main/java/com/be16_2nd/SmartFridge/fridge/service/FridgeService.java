@@ -1,11 +1,7 @@
 package com.be16_2nd.SmartFridge.fridge.service;
 
 import com.be16_2nd.SmartFridge.post.repository.PostRepository;
-import com.be16_2nd.SmartFridge.chat.domain.ChatRoomType;
-import com.be16_2nd.SmartFridge.chat.domain.IsRead;
-import com.be16_2nd.SmartFridge.chat.domain.ManagerChatRoom;
-import com.be16_2nd.SmartFridge.chat.repository.IsReadRepository;
-import com.be16_2nd.SmartFridge.chat.repository.ManagerChatRoomRepository;
+import com.be16_2nd.SmartFridge.chat.domain.ChatRoom;
 import com.be16_2nd.SmartFridge.chat.service.ChatService;
 import com.be16_2nd.SmartFridge.common.service.FridgeAccessValidator;
 import com.be16_2nd.SmartFridge.chat.service.ManagerChatRoomLifecycle;
@@ -42,7 +38,6 @@ public class FridgeService {
     private final FridgeRepository fridgeRepository;
     private final MemberRepository memberRepository;
     private final FridgeMemberRepository fridgeMemberRepository;
-    private final ManagerChatRoomRepository managerChatRoomRepository;
     private final ManagerChatRoomLifecycle managerChatRoomLifecycle;
     private final NotificationService notificationService;
 
@@ -50,7 +45,6 @@ public class FridgeService {
     private final FoodRepository foodRepository;
     private final PostRepository postRepository;
     private final ChatService chatService;
-    private final IsReadRepository isReadRepository;
 
     public FridgeCreateResDto create(FridgeCreateDto fridgeCreateDto){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -106,13 +100,12 @@ public class FridgeService {
         }
         List<FridgeMemberWithRoomIdResDto> fridgeMemberWithRoomIdResDtos = new ArrayList<>();
         for(FridgeMember fridgeMember : fridge.getFridgeMemberList()){
-            Long roomId = managerChatRoomRepository.findByFridgeAndMember(fridge, fridgeMember.getMember()).orElseThrow(()->new EntityNotFoundException("채팅방이 존재하지 않습니다")).getId();
+            ChatRoom managerChatRoom = managerChatRoomLifecycle.findManagerChatRoom(fridge, fridgeMember.getMember())
+                    .orElseThrow(()->new EntityNotFoundException("채팅방이 존재하지 않습니다"));
             // 해당 사용자의 채팅메시지 중에 관리자가 안읽은 메시지
-            ManagerChatRoom managerChatRoom = managerChatRoomRepository.findByFridgeAndMember(fridge, fridgeMember.getMember()).orElseThrow(()->new EntityNotFoundException("manager chat room not found"));
-            Long unReadCount = isReadRepository.countByMemberAndRoomIdAndChatRoomTypeAndIsReadFalse(manager, managerChatRoom.getId(), ChatRoomType.MANAGER);
+            Long unReadCount = managerChatRoomLifecycle.countUnread(managerChatRoom, manager);
 
-            fridgeMemberWithRoomIdResDtos.add(FridgeMemberWithRoomIdResDto.fromEntity(fridgeMember, roomId, unReadCount));
-            log.info("test");
+            fridgeMemberWithRoomIdResDtos.add(FridgeMemberWithRoomIdResDto.fromEntity(fridgeMember, managerChatRoom.getId(), unReadCount));
         }
         return fridgeMemberWithRoomIdResDtos;
     }
@@ -207,18 +200,8 @@ public class FridgeService {
                 .orElseThrow(() -> new AccessDeniedException("새로운 매니저가 해당 냉장고의 멤버가 아닙니다."));
         newFridgeManager.setType(Type.MANAGER);
 
-        // 이전 관리자가 읽지 않은 메시지를 새 관리자에게 위임
-        List<ManagerChatRoom> managerChatRooms = managerChatRoomRepository.findByFridge(fridge);
-        for(ManagerChatRoom managerChatRoom : managerChatRooms){
-            List<IsRead> isReads = isReadRepository.findAllByRoomIdAndMemberAndChatRoomTypeAndIsReadFalse(managerChatRoom.getId(), currentManager, ChatRoomType.MANAGER);
-            for(IsRead isRead : isReads){
-                isRead.updateMember(newManager);
-//                새 관리자의 읽지 않은 메시지는 읽음 처리
-                if(isRead.getMember().getId().equals(newManager.getId())){
-                    isRead.updateIsRead(true);
-                }
-            }
-        }
+        // 1대1 채팅방의 관리자 참여자를 새 관리자로 교체 (읽음 커서 이어받음)
+        managerChatRoomLifecycle.delegateManager(fridge, newManager);
     }
 
     @Transactional

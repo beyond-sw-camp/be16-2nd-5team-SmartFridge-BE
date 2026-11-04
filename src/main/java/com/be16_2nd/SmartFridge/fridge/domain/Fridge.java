@@ -1,8 +1,7 @@
 package com.be16_2nd.SmartFridge.fridge.domain;
 
 import com.be16_2nd.SmartFridge.post.domain.Post;
-import com.be16_2nd.SmartFridge.chat.domain.ManagerChatRoom;
-import com.be16_2nd.SmartFridge.chat.domain.PurchaseChatRoom;
+import com.be16_2nd.SmartFridge.chat.domain.ChatRoom;
 import com.be16_2nd.SmartFridge.common.domain.BaseTimeEntity;
 import com.be16_2nd.SmartFridge.food.domain.Food;
 import com.be16_2nd.SmartFridge.fridge.dto.FridgeUpdateDto;
@@ -45,11 +44,7 @@ public class Fridge extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "fridge", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<ManagerChatRoom>  managerChatRooms = new ArrayList<>();
-
-    @OneToMany(mappedBy = "fridge", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<PurchaseChatRoom>  purchaseChatRooms = new ArrayList<>();
+    private List<ChatRoom> chatRooms = new ArrayList<>();
 
     @OneToMany(mappedBy = "fridge", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

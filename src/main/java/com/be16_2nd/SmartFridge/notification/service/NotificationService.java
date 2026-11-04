@@ -2,7 +2,7 @@ package com.be16_2nd.SmartFridge.notification.service;
 
 import com.be16_2nd.SmartFridge.post.domain.Post;
 import com.be16_2nd.SmartFridge.post.domain.PostComment;
-import com.be16_2nd.SmartFridge.chat.domain.PurchaseChatRoom;
+import com.be16_2nd.SmartFridge.chat.domain.PurchasePost;
 import com.be16_2nd.SmartFridge.common.service.FridgeAccessValidator;
 import com.be16_2nd.SmartFridge.food.domain.Food;
 import com.be16_2nd.SmartFridge.fridge.domain.Fridge;
@@ -138,10 +138,10 @@ public class NotificationService {
                 break;
 
             case ROOM_FULL, ROOM_CLOSED:
-                PurchaseChatRoom purchaseChatRoom2 = (PurchaseChatRoom) entity;
-                content = "'" + purchaseChatRoom2.getTitle() + "'" + notificationType.getDescription();
+                PurchasePost purchasePost = (PurchasePost) entity;
+                content = "'" + purchasePost.getTitle() + "'" + notificationType.getDescription();
                 targetType = TargetType.CHAT;
-                targetId = purchaseChatRoom2.getId();
+                targetId = purchasePost.getChatRoom().getId();
                 break;
 
             default:

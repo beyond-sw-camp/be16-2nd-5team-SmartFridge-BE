@@ -11,15 +11,19 @@ import lombok.NoArgsConstructor;
 @Getter
 @Builder
 @Entity
-public class ChatMessageImage{
+public class ChatMessageImage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_massage_id", nullable = false)
+    @JoinColumn(name = "chat_message_id", nullable = false)
     private ChatMessage chatMessage;
 
     @Column(nullable = false)
     private String imageUrl;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer sortOrder = 0;
 }

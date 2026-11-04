@@ -1,6 +1,6 @@
 package com.be16_2nd.SmartFridge.chat.dto;
 
-import com.be16_2nd.SmartFridge.chat.domain.PurchaseChatRoom;
+import com.be16_2nd.SmartFridge.chat.domain.PurchasePost;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,7 +22,7 @@ public class PurchaseChatRoomResDto {
     private String joinStatus;
     private String productUrl;
 
-    public static PurchaseChatRoomResDto fromPurchaseChatRoom(PurchaseChatRoom purchaseChatRoom) {
+    public static PurchaseChatRoomResDto fromPurchasePost(PurchasePost purchaseChatRoom) {
         return PurchaseChatRoomResDto.builder()
                 .roomName(purchaseChatRoom.getTitle())
                 .userName(purchaseChatRoom.getCreator().getName())
