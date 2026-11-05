@@ -108,18 +108,22 @@ public class ChatService {
                 .isManager(fridgeMemberRepository.findByFridgeAndMember(fridge, member).orElseThrow(()->new EntityNotFoundException("member not found")).getType().equals(Type.MANAGER))
                 .build());
 
-        // 공동 구매 채팅방
-        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByMemberAndChatRoomFridgeAndChatRoomType(member, fridge, ChatRoomType.PURCHASE);
+        // 공동 구매 채팅방 (방 수와 상관없이 쿼리 3번: 목록, 참여자 수, 안 읽은 수)
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findMyPurchaseParticipations(member, fridge);
+        List<Long> roomIds = chatParticipants.stream().map(p -> p.getChatRoom().getId()).toList();
+        Map<Long, Long> participantCounts = participantCounts(roomIds);
+        Map<Long, Long> unreadCounts = roomIds.isEmpty() ? Map.of()
+                : RoomCount.toMap(chatMessageRepository.countUnreadByRoomIds(member.getId(), roomIds));
         for(ChatParticipant chatParticipant : chatParticipants){
             ChatRoom chatRoom = chatParticipant.getChatRoom();
             PurchasePost post = chatRoom.getPurchasePost();
             chatListResDtos.add(MyChatListResDto.builder()
                     .roomId(chatRoom.getId())
                     .userName(post.getCreator().getName())
-                    .currentParticipants(post.getCurrentParticipants())
+                    .currentParticipants(participantCounts.getOrDefault(chatRoom.getId(), 0L).intValue())
                     .maxParticipants(post.getMaxParticipants())
                     .roomName(post.getTitle())
-                    .unReadCount(chatMessageRepository.countUnread(chatRoom.getId(), chatParticipant.getLastReadMessageId(), member.getId()))
+                    .unReadCount(unreadCounts.getOrDefault(chatRoom.getId(), 0L))
                     .isCreator(post.getCreator().getId().equals(member.getId()))
                     .JoinStatus(post.getJoinStatus().toString())
                     .build());
@@ -202,14 +206,16 @@ public class ChatService {
         // 해당 냉장고 참여자인지 확인
         fridgeAccessValidator.validate(fridge.getId());
 
-        List<PurchasePost> posts = purchasePostRepository.findByChatRoomFridgeAndJoinStatusAndIsActiveOrderByCreatedTimeDesc(fridge, JoinStatus.OPEN, true);
+        // 방 수와 상관없이 쿼리 2번: 목록(방·방장 포함), 참여자 수
+        List<PurchasePost> posts = purchasePostRepository.findOpenPostsWithRoomAndCreator(fridge, JoinStatus.OPEN);
+        Map<Long, Long> participantCounts = participantCounts(posts.stream().map(p -> p.getChatRoom().getId()).toList());
         List<PurchaseChatRoomListResDto> result = new ArrayList<>();
         for(PurchasePost post : posts){
             result.add(PurchaseChatRoomListResDto.builder()
                     .roomId(post.getChatRoom().getId())
                     .roomName(post.getTitle())
                     .isCreator(post.getCreator().getId().equals(member.getId()))
-                    .currentParticipants(post.getCurrentParticipants())
+                    .currentParticipants(participantCounts.getOrDefault(post.getChatRoom().getId(), 0L).intValue())
                     .maxParticipants(post.getMaxParticipants())
                     .joinStatus(post.getJoinStatus().toString())
                     .userName(post.getCreator().getName())
@@ -341,6 +347,10 @@ public class ChatService {
         }
         post.updateJoinStatus(JoinStatus.CLOSE);
         return roomId;
+    }
+
+    private Map<Long, Long> participantCounts(List<Long> roomIds) {
+        return roomIds.isEmpty() ? Map.of() : RoomCount.toMap(chatParticipantRepository.countByRoomIds(roomIds));
     }
 
     private Member currentMember() {

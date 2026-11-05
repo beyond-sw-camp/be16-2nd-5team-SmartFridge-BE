@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -98,14 +99,20 @@ public class FridgeService {
         if (context.type() != Type.MANAGER) {
             throw new AccessDeniedException("오직 MANAGER만 멤버 목록을 조회할 수 있습니다.");
         }
-        List<FridgeMemberWithRoomIdResDto> fridgeMemberWithRoomIdResDtos = new ArrayList<>();
-        for(FridgeMember fridgeMember : fridge.getFridgeMemberList()){
-            ChatRoom managerChatRoom = managerChatRoomLifecycle.findManagerChatRoom(fridge, fridgeMember.getMember())
-                    .orElseThrow(()->new EntityNotFoundException("채팅방이 존재하지 않습니다"));
-            // 해당 사용자의 채팅메시지 중에 관리자가 안읽은 메시지
-            Long unReadCount = managerChatRoomLifecycle.countUnread(managerChatRoom, manager);
+        // 멤버 수와 상관없이 쿼리 3번: 멤버(회원 포함), 1대1 방, 관리자가 안 읽은 수
+        List<FridgeMember> fridgeMembers = fridgeMemberRepository.findByFridgeWithMember(fridge);
+        Map<UUID, Long> roomIdByOwner = managerChatRoomLifecycle.managerRoomIdsByOwner(fridge);
+        Map<Long, Long> unreadByRoom = managerChatRoomLifecycle.countUnread(roomIdByOwner.values(), manager);
 
-            fridgeMemberWithRoomIdResDtos.add(FridgeMemberWithRoomIdResDto.fromEntity(fridgeMember, managerChatRoom.getId(), unReadCount));
+        List<FridgeMemberWithRoomIdResDto> fridgeMemberWithRoomIdResDtos = new ArrayList<>();
+        for(FridgeMember fridgeMember : fridgeMembers){
+            Long roomId = roomIdByOwner.get(fridgeMember.getMember().getId());
+            if (roomId == null) {
+                throw new EntityNotFoundException("채팅방이 존재하지 않습니다");
+            }
+            // 해당 사용자의 채팅메시지 중에 관리자가 안읽은 메시지
+            Long unReadCount = unreadByRoom.getOrDefault(roomId, 0L);
+            fridgeMemberWithRoomIdResDtos.add(FridgeMemberWithRoomIdResDto.fromEntity(fridgeMember, roomId, unReadCount));
         }
         return fridgeMemberWithRoomIdResDtos;
     }
