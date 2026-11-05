@@ -176,6 +176,7 @@ public class FridgeService {
             foodRepository.deleteAllByFridgeAndMember(context.fridge(), context.member());
             postRepository.deleteAllByFridgeAndMember(context.fridge(), context.member());
             managerChatRoomLifecycle.deleteManagerChatRoom(context.member(), context.fridge());
+            chatService.leaveAllPurchaseChatRooms(context.fridge(), context.member());
         }
         return context.fridge().getId();
     }

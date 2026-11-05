@@ -267,6 +267,12 @@ public class ChatService {
         }
 
         Member member = memberRepository.findByEmail(memberEmail).orElseThrow(() -> new EntityNotFoundException("member not found"));
+        leaveAllPurchaseChatRooms(fridge, member);
+    }
+
+    // 냉장고를 떠나는 회원을 그 냉장고의 공동구매 채팅방에서 모두 내보낸다 (방장이면 방 삭제)
+    // 권한 확인은 호출하는 쪽(냉장고 나가기 / 강퇴)에서 한다
+    public void leaveAllPurchaseChatRooms(Fridge fridge, Member member) {
         for (ChatParticipant chatParticipant : chatParticipantRepository.findByMemberAndChatRoomFridgeAndChatRoomType(member, fridge, ChatRoomType.PURCHASE)) {
             leaveRoom(chatParticipant.getChatRoom(), chatParticipant);
         }
