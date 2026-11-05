@@ -86,6 +86,13 @@ class ChatSecurityTest {
     }
 
     @Test
+    void 메시지에_외부_이미지_URL을_넣을_수_없다() {
+        assertThatThrownBy(() -> chatService.saveMessage(purchaseRoomId, ChatRoomType.PURCHASE, "a@sec.com",
+                ChatMessageDto.builder().imageUrls(List.of("https://evil.example.com/x.png")).build()))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void 참여하지_않은_방에는_메시지를_보낼_수_없다() {
         assertThatThrownBy(() -> chatService.saveMessage(purchaseRoomId, ChatRoomType.PURCHASE, "b@sec.com",
                 ChatMessageDto.builder().message("끼어들기").build()))
