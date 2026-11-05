@@ -47,6 +47,8 @@ public class FridgeService {
     private final PostRepository postRepository;
     private final ChatService chatService;
 
+    // 냉장고 + 관리자 멤버 + 관리자 1대1 채팅방을 한 트랜잭션으로 생성
+    @Transactional
     public FridgeCreateResDto create(FridgeCreateDto fridgeCreateDto){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("member is not found"));
@@ -91,6 +93,7 @@ public class FridgeService {
         return fridge.getId();
     }
 
+    @Transactional(readOnly = true)
     public List<FridgeMemberWithRoomIdResDto> findByFridgeMember(Long fridgeId){
         FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
         Fridge fridge = context.fridge();
@@ -117,11 +120,13 @@ public class FridgeService {
         return fridgeMemberWithRoomIdResDtos;
     }
 
+    @Transactional(readOnly = true)
     public FridgeListDto fridgeDetail(Long fridgeId) {
         FridgeAccessValidator.FridgeContext context =  fridgeAccessValidator.validate(fridgeId);
         return FridgeListDto.fromEntity(context.fridge(),context.type());
     }
 
+    @Transactional(readOnly = true)
     public List<FridgeListDto> findMyFridges() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByEmail(email)
@@ -134,6 +139,8 @@ public class FridgeService {
                 .collect(Collectors.toList());
     }
 
+    // 냉장고 멤버 추가 + 1대1 채팅방 생성 + 관리자 알림 저장을 한 트랜잭션으로 (중간에 실패하면 모두 취소)
+    @Transactional
     public Long joinFridge(String inviteCode){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByEmail(email)
