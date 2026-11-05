@@ -48,7 +48,7 @@ class MemberServiceLoginTest {
                 .hasMessageContaining("구글");
         flushClear();
 
-        assertThat(memberRepository.findById(google.getId()).orElseThrow().getSocialAccounts()).hasSize(1);
+        assertThat(memberRepository.findById(google.getId()).orElseThrow().getSocialType()).isEqualTo(SocialType.GOOGLE);
         assertThat(memberService.socialLogin(SocialType.GOOGLE, "g-2", "same@test.com", true, "회원", null).getId())
                 .isEqualTo(google.getId());
     }

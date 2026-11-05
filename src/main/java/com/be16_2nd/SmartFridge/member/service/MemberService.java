@@ -10,11 +10,9 @@ import com.be16_2nd.SmartFridge.post.repository.PostRepository;
 import com.be16_2nd.SmartFridge.common.service.S3Uploader;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import com.be16_2nd.SmartFridge.member.domain.Role;
-import com.be16_2nd.SmartFridge.member.domain.SocialAccount;
 import com.be16_2nd.SmartFridge.member.domain.SocialType;
 import com.be16_2nd.SmartFridge.member.dto.*;
 import com.be16_2nd.SmartFridge.member.repository.MemberRepository;
-import com.be16_2nd.SmartFridge.member.repository.SocialAccountRepository;
 import com.be16_2nd.SmartFridge.notification.domain.NotificationSetting;
 import com.be16_2nd.SmartFridge.notification.dto.NotificationSettingDto;
 import com.be16_2nd.SmartFridge.notification.repository.NotificationSettingRepository;
@@ -39,7 +37,6 @@ public class MemberService {
 
 
     private final MemberRepository memberRepository;
-    private final SocialAccountRepository socialAccountRepository;
     private final PasswordEncoder passwordEncoder;
     private final S3Uploader s3Uploader;
     private final PostRepository postRepository;
@@ -60,15 +57,15 @@ public class MemberService {
 
     /**
      * 소셜 로그인 처리
-     * 1. 이미 연결된 소셜 계정이면 해당 회원 반환
+     * 1. 이미 가입한 소셜 계정(social_type + social_id)이면 해당 회원 반환
      * 2. 같은 이메일의 회원이 있으면 자동으로 합치지 않고, 기존에 가입한 소셜 계정으로 로그인하도록 안내
-     * 3. 없으면 신규 회원 생성 후 연결 (인증된 이메일만)
+     * 3. 없으면 신규 회원 생성 (인증된 이메일만)
      */
     public Member socialLogin(SocialType socialType, String socialId, String email, boolean emailVerified,
                               String name, String picture){
-        Optional<SocialAccount> linked = socialAccountRepository.findBySocialTypeAndSocialId(socialType, socialId);
+        Optional<Member> linked = memberRepository.findBySocialTypeAndSocialId(socialType, socialId);
         if (linked.isPresent()){
-            return linked.get().getMember();
+            return linked.get();
         }
 
         if (email == null || email.isBlank()){
@@ -81,15 +78,12 @@ public class MemberService {
             if (member.getRole() == Role.ADMIN){
                 throw new IllegalArgumentException("소셜 로그인을 사용할 수 없는 계정입니다.");
             }
-            String providers = member.getSocialAccounts().stream()
-                    .map(account -> account.getSocialType().getDisplayName())
-                    .distinct()
-                    .collect(Collectors.joining(", "));
-            if (providers.isEmpty()){
+            if (member.getSocialType() == null){
                 throw new IllegalArgumentException("이미 가입된 이메일입니다. 관리자에게 문의해주세요.");
             }
-            throw new IllegalArgumentException("이미 " + providers + "(으)로 가입된 이메일입니다. "
-                    + providers + "(으)로 로그인해주세요.");
+            String provider = member.getSocialType().getDisplayName();
+            throw new IllegalArgumentException("이미 " + provider + "(으)로 가입된 이메일입니다. "
+                    + provider + "(으)로 로그인해주세요.");
         }
 
         // 인증되지 않은 이메일로 가입하면, 진짜 이메일 주인이 나중에 가입하지 못하게 막을 수 있으므로 거부
@@ -101,8 +95,9 @@ public class MemberService {
                 .email(email)
                 .name(name)
                 .profileImage(picture)
+                .socialType(socialType)
+                .socialId(socialId)
                 .build();
-        member.linkSocialAccount(socialType, socialId);
         memberRepository.save(member);
         return member;
     }
