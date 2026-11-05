@@ -1,3 +1,6 @@
+-- [사용 중지] 소셜 정보를 다시 member 로 합치기로 해서 이 스크립트는 실행하지 않는다.
+--            대신 scripts/db/social-account-to-member-migration.sql 을 실행한다.
+--
 -- 소셜 로그인 전용 전환: member.social_type / member.social_id -> social_account 테이블
 --
 -- 운영(prod)은 ddl-auto: update 라서 social_account 테이블은 앱 기동 시 자동 생성되지만,

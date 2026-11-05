@@ -5,6 +5,8 @@ import com.be16_2nd.SmartFridge.fridge.domain.FridgeMember;
 import com.be16_2nd.SmartFridge.fridge.domain.Type;
 import com.be16_2nd.SmartFridge.member.domain.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,6 +19,10 @@ public interface FridgeMemberRepository extends JpaRepository<FridgeMember, Long
     List<FridgeMember> findAllByMember(Member member);
     Optional<FridgeMember> findByFridgeAndMember(Fridge fridge, Member member);   //Optional 로바꿈 -찬진
     List<FridgeMember> findByFridge(Fridge fridge);
+
+    // 냉장고 멤버 목록 (회원 정보 함께 조회)
+    @Query("select fm from FridgeMember fm join fetch fm.member where fm.fridge = :fridge order by fm.id")
+    List<FridgeMember> findByFridgeWithMember(@Param("fridge") Fridge fridge);
     Optional<FridgeMember> findByFridgeAndType(Fridge fridge, Type type);
     List<FridgeMember> findAllByFridgeAndType(Fridge fridge, Type type);
 }

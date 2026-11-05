@@ -5,6 +5,7 @@ import com.be16_2nd.SmartFridge.chat.dto.ChatMessageDto;
 import com.be16_2nd.SmartFridge.chat.dto.ChatRoomCreateDto;
 import com.be16_2nd.SmartFridge.chat.service.ChatService;
 import com.be16_2nd.SmartFridge.common.dto.CommonDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,7 +50,7 @@ public class PurchaseChatController {
 
     // 공동구매 채팅방 개설
     @PostMapping("/create")
-    public ResponseEntity<?> createPurchaseRoom(@RequestBody ChatRoomCreateDto chatRoomCreateDto){
+    public ResponseEntity<?> createPurchaseRoom(@RequestBody @Valid ChatRoomCreateDto chatRoomCreateDto){
         return new ResponseEntity<>(CommonDto.builder()
                 .result(chatService.createPurchaseChatRoom(chatRoomCreateDto))
                 .status_code(HttpStatus.CREATED.value())
@@ -121,6 +122,7 @@ public class PurchaseChatController {
     public ResponseEntity<?> completePurchase(@PathVariable Long roomId) {
         return new ResponseEntity<>(CommonDto.builder()
                 .result(chatService.completePurchase(roomId))
+                .status_code(HttpStatus.OK.value())
                 .status_message("채팅방 종료 완료")
                 .build(), HttpStatus.OK);
     }

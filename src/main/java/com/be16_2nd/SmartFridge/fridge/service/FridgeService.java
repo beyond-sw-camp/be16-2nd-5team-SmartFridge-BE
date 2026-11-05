@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -54,6 +55,7 @@ public class FridgeService {
         return inviteBaseUrl + "/" + fridge.getInviteCode();
     }
 
+    // 냉장고 + 관리자 멤버 + 관리자 1대1 채팅방을 한 트랜잭션으로 생성
     @Transactional
     public FridgeCreateResDto create(FridgeCreateDto fridgeCreateDto){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -98,6 +100,7 @@ public class FridgeService {
         return fridge.getId();
     }
 
+    @Transactional(readOnly = true)
     public List<FridgeMemberWithRoomIdResDto> findByFridgeMember(Long fridgeId){
         FridgeAccessValidator.FridgeContext context = fridgeAccessValidator.validate(fridgeId);
         Fridge fridge = context.fridge();
@@ -106,23 +109,31 @@ public class FridgeService {
         if (context.type() != Type.MANAGER) {
             throw new AccessDeniedException("오직 MANAGER만 멤버 목록을 조회할 수 있습니다.");
         }
-        List<FridgeMemberWithRoomIdResDto> fridgeMemberWithRoomIdResDtos = new ArrayList<>();
-        for(FridgeMember fridgeMember : fridge.getFridgeMemberList()){
-            ChatRoom managerChatRoom = managerChatRoomLifecycle.findManagerChatRoom(fridge, fridgeMember.getMember())
-                    .orElseThrow(()->new EntityNotFoundException("채팅방이 존재하지 않습니다"));
-            // 해당 사용자의 채팅메시지 중에 관리자가 안읽은 메시지
-            Long unReadCount = managerChatRoomLifecycle.countUnread(managerChatRoom, manager);
+        // 멤버 수와 상관없이 쿼리 3번: 멤버(회원 포함), 1대1 방, 관리자가 안 읽은 수
+        List<FridgeMember> fridgeMembers = fridgeMemberRepository.findByFridgeWithMember(fridge);
+        Map<UUID, Long> roomIdByOwner = managerChatRoomLifecycle.managerRoomIdsByOwner(fridge);
+        Map<Long, Long> unreadByRoom = managerChatRoomLifecycle.countUnread(roomIdByOwner.values(), manager);
 
-            fridgeMemberWithRoomIdResDtos.add(FridgeMemberWithRoomIdResDto.fromEntity(fridgeMember, managerChatRoom.getId(), unReadCount));
+        List<FridgeMemberWithRoomIdResDto> fridgeMemberWithRoomIdResDtos = new ArrayList<>();
+        for(FridgeMember fridgeMember : fridgeMembers){
+            Long roomId = roomIdByOwner.get(fridgeMember.getMember().getId());
+            if (roomId == null) {
+                throw new EntityNotFoundException("채팅방이 존재하지 않습니다");
+            }
+            // 해당 사용자의 채팅메시지 중에 관리자가 안읽은 메시지
+            Long unReadCount = unreadByRoom.getOrDefault(roomId, 0L);
+            fridgeMemberWithRoomIdResDtos.add(FridgeMemberWithRoomIdResDto.fromEntity(fridgeMember, roomId, unReadCount));
         }
         return fridgeMemberWithRoomIdResDtos;
     }
 
+    @Transactional(readOnly = true)
     public FridgeListDto fridgeDetail(Long fridgeId) {
         FridgeAccessValidator.FridgeContext context =  fridgeAccessValidator.validate(fridgeId);
         return FridgeListDto.fromEntity(context.fridge(),context.type());
     }
 
+    @Transactional(readOnly = true)
     public List<FridgeListDto> findMyFridges() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByEmail(email)
@@ -136,6 +147,7 @@ public class FridgeService {
                 .collect(Collectors.toList());
     }
 
+    // 냉장고 멤버 추가 + 1대1 채팅방 생성 + 관리자 알림 저장을 한 트랜잭션으로 (중간에 실패하면 모두 취소)
     @Transactional
     public Long joinFridge(String inviteCode){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -186,6 +198,7 @@ public class FridgeService {
             foodRepository.deleteAllByFridgeAndMember(context.fridge(), context.member());
             postRepository.deleteAllByFridgeAndMember(context.fridge(), context.member());
             managerChatRoomLifecycle.deleteManagerChatRoom(context.member(), context.fridge());
+            chatService.leaveAllPurchaseChatRooms(context.fridge(), context.member());
         }
         return context.fridge().getId();
     }
