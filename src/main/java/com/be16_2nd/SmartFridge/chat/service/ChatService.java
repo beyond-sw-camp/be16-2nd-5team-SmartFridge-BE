@@ -57,6 +57,8 @@ public class ChatService {
         Member sender = chatRoomParticipantValidator.validateParticipant(senderEmail, roomId, chatRoomType).getMember();
 
         List<String> imageUrls = Optional.ofNullable(chatMessageDto.getImageUrls()).orElse(List.of());
+        // 이 채팅방에 업로드된 이미지만 허용 (외부 URL 끼워 넣기 차단)
+        chatImageService.validateImageUrls(chatRoomType, roomId, imageUrls);
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatRoom(chatRoom)
                 .sender(sender)
@@ -292,8 +294,7 @@ public class ChatService {
     public List<String> uploadImages(Long roomId, ChatRoomType chatRoomType, List<MultipartFile> files){
         Member member = currentMember();
         chatRoomParticipantValidator.validateParticipant(member.getEmail(), roomId, chatRoomType);
-        String pattern = "manager/chat/"+roomId+"/";
-        return chatImageService.uploadImages(files, pattern);
+        return chatImageService.uploadImages(chatRoomType, roomId, files);
     }
 
     // 공동 구매 채팅방 정보 가져오기
