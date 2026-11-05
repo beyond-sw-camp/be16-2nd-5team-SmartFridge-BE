@@ -1,7 +1,7 @@
 package com.be16_2nd.SmartFridge.chat.config;
 
 import com.be16_2nd.SmartFridge.chat.domain.ChatRoomType;
-import com.be16_2nd.SmartFridge.chat.service.ManagerChatRoomLifecycle;
+import com.be16_2nd.SmartFridge.chat.service.ChatPresence;
 import com.be16_2nd.SmartFridge.chat.service.Validator.ChatRoomParticipantValidator;
 import com.be16_2nd.SmartFridge.chat.service.Validator.TokenValidator;
 import io.jsonwebtoken.Claims;
@@ -19,7 +19,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.security.Principal;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -41,6 +40,7 @@ public class StompHandler implements ChannelInterceptor {
 
     private final TokenValidator tokenValidator;
     private final ChatRoomParticipantValidator chatRoomParticipantValidator;
+    private final ChatPresence chatPresence;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -72,30 +72,22 @@ public class StompHandler implements ChannelInterceptor {
     private void subscribe(StompHeaderAccessor accessor) {
         String email = requireUser(accessor);
         Matcher matcher = SUBSCRIBE_DESTINATION.matcher(Objects.requireNonNullElse(accessor.getDestination(), ""));
-        if (!matcher.matches()) {
-            throw new AccessDeniedException("잘못된 구독 경로입니다.");
+        if (!matcher.matches() || accessor.getSubscriptionId() == null) {
+            throw new AccessDeniedException("잘못된 구독 요청입니다.");
         }
         ChatRoomType roomType = ChatRoomType.valueOf(matcher.group(1));
         Long roomId = Long.parseLong(matcher.group(2));
 
         // 채팅방 참여자 확인
         chatRoomParticipantValidator.validateParticipant(email, roomId, roomType);
-        // 현재 채팅방을 보고 있는 사용자에 추가
-        ManagerChatRoomLifecycle.onlineMembers(roomType)
-                .computeIfAbsent(roomId, k -> new HashSet<>())
-                .add(email);
+        // 지금 채팅방을 보고 있는 사용자에 추가
+        chatPresence.subscribe(accessor.getSessionAttributes(), accessor.getSessionId(), accessor.getSubscriptionId(),
+                roomType, roomId, email);
     }
 
-    // 구독 끊을 경우 현재 접속 중인 사용자 제거
+    // 구독 해제: 구독 id로 방을 찾아 지금 보고 있는 사용자에서 제거 (연결 종료는 StompEventListener)
     private void unsubscribe(StompHeaderAccessor accessor) {
-        String email = (String) accessor.getSessionAttributes().get("email");
-        String roomType = Objects.requireNonNull(accessor.getNativeHeader("roomType")).get(0);
-        Long roomId = Long.parseLong(Objects.requireNonNull(accessor.getNativeHeader("roomId")).get(0));
-        if (roomType.equals("manager")) {
-            ManagerChatRoomLifecycle.ManagerRoomParticipants.get(roomId).remove(email);
-        } else if (roomType.equals("purchase")) {
-            ManagerChatRoomLifecycle.PurchaseRoomParticipants.get(roomId).remove(email);
-        }
+        chatPresence.unsubscribe(accessor.getSessionAttributes(), accessor.getSessionId(), accessor.getSubscriptionId());
     }
 
     // CONNECT 때 세션에 묶인 사용자 (없으면 거부)

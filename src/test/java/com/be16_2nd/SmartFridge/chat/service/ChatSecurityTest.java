@@ -16,6 +16,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -43,6 +45,8 @@ class ChatSecurityTest {
     @Autowired ChatService chatService;
     @Autowired PurchasePostRepository purchasePostRepository;
     @Autowired StompHandler stompHandler;
+    @Autowired ChatPresence chatPresence;
+    @Autowired @Qualifier("chatPubSub") StringRedisTemplate redisTemplate;
 
     Long fridgeId;
     Long purchaseRoomId;
@@ -70,7 +74,7 @@ class ChatSecurityTest {
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
-        ManagerChatRoomLifecycle.PurchaseRoomParticipants.clear();
+        redisTemplate.delete(ChatPresence.key(ChatRoomType.PURCHASE, purchaseRoomId));
     }
 
     @Test
@@ -126,13 +130,14 @@ class ChatSecurityTest {
                 .isInstanceOf(AccessDeniedException.class);
 
         stompHandler.preSend(frame(StompCommand.SUBSCRIBE, "/topic/chat/PURCHASE/" + purchaseRoomId, "a@sec.com"), null);
-        assertThat(ManagerChatRoomLifecycle.PurchaseRoomParticipants.get(purchaseRoomId)).contains("a@sec.com");
+        assertThat(chatPresence.onlineEmails(ChatRoomType.PURCHASE, purchaseRoomId)).containsExactly("a@sec.com");
     }
 
     private Message<byte[]> frame(StompCommand command, String destination, String userEmail) {
         StompHeaderAccessor accessor = StompHeaderAccessor.create(command);
         accessor.setDestination(destination);
         accessor.setSessionId("test-session");
+        accessor.setSubscriptionId("sub-0");
         accessor.setSessionAttributes(new HashMap<>());
         if (userEmail != null) {
             accessor.setUser(new UsernamePasswordAuthenticationToken(userEmail, null, List.of()));

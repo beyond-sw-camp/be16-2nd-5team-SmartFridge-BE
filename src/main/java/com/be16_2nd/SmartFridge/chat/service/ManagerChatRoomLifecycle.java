@@ -16,10 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /*
  * 1대1 관리자 채팅방 생명주기
@@ -29,14 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Transactional
 @RequiredArgsConstructor
 public class ManagerChatRoomLifecycle {
-
-    // 현재 채팅방을 보고 있는 사용자 <채팅방ID, 회원이메일>
-    public static Map<Long, Set<String>> ManagerRoomParticipants = new ConcurrentHashMap<>();
-    public static Map<Long, Set<String>> PurchaseRoomParticipants = new ConcurrentHashMap<>();
-
-    public static Map<Long, Set<String>> onlineMembers(ChatRoomType type) {
-        return type == ChatRoomType.MANAGER ? ManagerRoomParticipants : PurchaseRoomParticipants;
-    }
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;

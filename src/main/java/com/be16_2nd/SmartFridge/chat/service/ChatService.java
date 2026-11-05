@@ -48,6 +48,7 @@ public class ChatService {
     private final FridgeAccessValidator fridgeAccessValidator;
     private final ManagerChatRoomLifecycle managerChatRoomLifecycle;
     private final NotificationService notificationService;
+    private final ChatPresence chatPresence;
 
     // 메시지 저장 (1대1 / 공동구매 공통)
     // senderEmail 은 인증된 세션 사용자여야 한다 (클라이언트가 보낸 값 사용 금지)
@@ -67,7 +68,7 @@ public class ChatService {
         chatRoom.updateLastMessageAt(chatMessage.getCreatedTime());
 
         // 보낸 사람과, 지금 채팅방을 보고 있는 참여자는 읽음 처리
-        Set<String> online = ManagerChatRoomLifecycle.onlineMembers(chatRoomType).getOrDefault(roomId, Collections.emptySet());
+        Set<String> online = chatPresence.onlineEmails(chatRoomType, roomId);
         for (ChatParticipant participant : chatRoom.getParticipants()) {
             String email = participant.getMember().getEmail();
             if (email.equals(sender.getEmail()) || online.contains(email)) {
@@ -302,7 +303,7 @@ public class ChatService {
         PurchasePost post = getPurchasePost(roomId);
         // 해당 냉장고 참여자인지 확인
         fridgeAccessValidator.validate(post.getChatRoom().getFridge().getId());
-        Set<String> online = ManagerChatRoomLifecycle.PurchaseRoomParticipants.getOrDefault(roomId, Collections.emptySet());
+        Set<String> online = chatPresence.onlineEmails(ChatRoomType.PURCHASE, roomId);
 
         List<ParticipantsResDto> participantsResDtos = new ArrayList<>();
         for(ChatParticipant chatParticipant : post.getChatRoom().getParticipants()){
