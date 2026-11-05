@@ -16,7 +16,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.be16_2nd.SmartFridge.chat.repository.RoomCount;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /*
  * 1대1 관리자 채팅방 생명주기
@@ -86,6 +92,23 @@ public class ManagerChatRoomLifecycle {
             ChatParticipant participant = chatRoom.addParticipant(newManager, ParticipantRole.MANAGER);
             participant.readUpTo(inheritedCursor != null ? inheritedCursor : chatMessageRepository.findLastMessageId(chatRoom.getId()));
         }
+    }
+
+    // 냉장고의 1대1 채팅방을 방 주인 회원 id 기준으로 (회원 목록에서 방마다 조회하지 않도록)
+    @Transactional(readOnly = true)
+    public Map<UUID, Long> managerRoomIdsByOwner(Fridge fridge) {
+        Map<UUID, Long> roomIds = new HashMap<>();
+        for (ChatParticipantRepository.OwnerRoom owner : chatParticipantRepository.findManagerRoomOwners(fridge)) {
+            roomIds.put(owner.getMemberId(), owner.getRoomId());
+        }
+        return roomIds;
+    }
+
+    // 여러 방의 안 읽은 메시지 수 (참여자가 아닌 방은 결과에 없음 = 0)
+    @Transactional(readOnly = true)
+    public Map<Long, Long> countUnread(Collection<Long> roomIds, Member member) {
+        return roomIds.isEmpty() ? Map.of()
+                : RoomCount.toMap(chatMessageRepository.countUnreadByRoomIds(member.getId(), roomIds));
     }
 
     // 안 읽은 메시지 수 (참여자가 아니면 0)
