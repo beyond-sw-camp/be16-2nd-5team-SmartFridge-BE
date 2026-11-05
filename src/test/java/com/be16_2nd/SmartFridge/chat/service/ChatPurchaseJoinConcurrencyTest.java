@@ -56,20 +56,16 @@ class ChatPurchaseJoinConcurrencyTest {
             memberService.socialLogin(SocialType.GOOGLE, "j" + i + "-" + run, joiners.get(i), true, "참여자" + i, null);
         }
 
-        // 준비 데이터는 한 트랜잭션에서 만들고 커밋한다
-        // (joinFridge 에 @Transactional 이 없어 트랜잭션 밖에서 부르면 지연 로딩 오류가 난다. 운영은 open-in-view 로 가려져 있음)
-        Long roomId = transactionTemplate.execute(s -> {
-            login(creator);
-            Long fridgeId = fridgeService.create(FridgeCreateDto.builder().fridgeName("동시성냉장고").build()).getFridgeId();
-            String inviteCode = fridgeRepository.findById(fridgeId).orElseThrow().getInviteCode();
-            for (String joiner : joiners) {
-                login(joiner);
-                fridgeService.joinFridge(inviteCode);
-            }
-            login(creator);
-            return chatService.createPurchaseChatRoom(ChatRoomCreateDto.builder()
-                    .fridgeId(fridgeId).title("동시 참여").maxParticipants(MAX_PARTICIPANTS).build());
-        });
+        login(creator);
+        Long fridgeId = fridgeService.create(FridgeCreateDto.builder().fridgeName("동시성냉장고").build()).getFridgeId();
+        String inviteCode = fridgeRepository.findById(fridgeId).orElseThrow().getInviteCode();
+        for (String joiner : joiners) {
+            login(joiner);
+            fridgeService.joinFridge(inviteCode);
+        }
+        login(creator);
+        Long roomId = chatService.createPurchaseChatRoom(ChatRoomCreateDto.builder()
+                .fridgeId(fridgeId).title("동시 참여").maxParticipants(MAX_PARTICIPANTS).build());
 
         // 모든 스레드가 준비된 뒤 한꺼번에 참여
         ExecutorService pool = Executors.newFixedThreadPool(JOINERS);
