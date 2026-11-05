@@ -160,9 +160,7 @@ class ChatRoomStructureTest {
     }
 
     private void send(Long roomId, ChatRoomType type, String senderEmail, String message) {
-        chatService.saveMessage(roomId, ChatMessageDto.builder()
-                .chatRoomType(type.name())
-                .senderEmail(senderEmail)
+        chatService.saveMessage(roomId, type, senderEmail, ChatMessageDto.builder()
                 .message(message)
                 .imageUrls(List.of())
                 .build());

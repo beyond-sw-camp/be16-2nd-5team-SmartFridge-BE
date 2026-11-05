@@ -50,11 +50,10 @@ public class ChatService {
     private final NotificationService notificationService;
 
     // 메시지 저장 (1대1 / 공동구매 공통)
-    public ChatMessage saveMessage(Long roomId, ChatMessageDto chatMessageDto) {
-        ChatRoomType chatRoomType = ChatRoomType.valueOf(chatMessageDto.getChatRoomType());
+    // senderEmail 은 인증된 세션 사용자여야 한다 (클라이언트가 보낸 값 사용 금지)
+    public ChatMessage saveMessage(Long roomId, ChatRoomType chatRoomType, String senderEmail, ChatMessageDto chatMessageDto) {
         ChatRoom chatRoom = getRoom(roomId, chatRoomType);
-        Member sender = memberRepository.findByEmail(chatMessageDto.getSenderEmail())
-                .orElseThrow(() -> new EntityNotFoundException("member cannot find"));
+        Member sender = chatRoomParticipantValidator.validateParticipant(senderEmail, roomId, chatRoomType).getMember();
 
         List<String> imageUrls = Optional.ofNullable(chatMessageDto.getImageUrls()).orElse(List.of());
         ChatMessage chatMessage = ChatMessage.builder()
@@ -68,7 +67,7 @@ public class ChatService {
         chatRoom.updateLastMessageAt(chatMessage.getCreatedTime());
 
         // 보낸 사람과, 지금 채팅방을 보고 있는 참여자는 읽음 처리
-        Set<String> online = onlineMembers(chatRoomType).getOrDefault(roomId, Collections.emptySet());
+        Set<String> online = ManagerChatRoomLifecycle.onlineMembers(chatRoomType).getOrDefault(roomId, Collections.emptySet());
         for (ChatParticipant participant : chatRoom.getParticipants()) {
             String email = participant.getMember().getEmail();
             if (email.equals(sender.getEmail()) || online.contains(email)) {
@@ -292,12 +291,17 @@ public class ChatService {
 
     // 공동 구매 채팅방 정보 가져오기
     public PurchaseChatRoomResDto getRoomInfo(Long roomId){
-        return PurchaseChatRoomResDto.fromPurchasePost(getPurchasePost(roomId));
+        PurchasePost post = getPurchasePost(roomId);
+        // 해당 냉장고 참여자인지 확인
+        fridgeAccessValidator.validate(post.getChatRoom().getFridge().getId());
+        return PurchaseChatRoomResDto.fromPurchasePost(post);
     }
 
     // 참여자 목록 가져오기
     public List<ParticipantsResDto> getParticipants(Long roomId){
         PurchasePost post = getPurchasePost(roomId);
+        // 해당 냉장고 참여자인지 확인
+        fridgeAccessValidator.validate(post.getChatRoom().getFridge().getId());
         Set<String> online = ManagerChatRoomLifecycle.PurchaseRoomParticipants.getOrDefault(roomId, Collections.emptySet());
 
         List<ParticipantsResDto> participantsResDtos = new ArrayList<>();
@@ -316,7 +320,12 @@ public class ChatService {
 
     // 공동 구매 완료 버튼 누를 시 CLOSE상태로 전환
     public Long completePurchase(Long roomId){
-        getPurchasePost(roomId).updateJoinStatus(JoinStatus.CLOSE);
+        PurchasePost post = getPurchasePost(roomId);
+        // 방장만 마감할 수 있다
+        if (!post.getCreator().getId().equals(currentMember().getId())) {
+            throw new AccessDeniedException("방장만 공동구매를 완료할 수 있습니다.");
+        }
+        post.updateJoinStatus(JoinStatus.CLOSE);
         return roomId;
     }
 
@@ -333,11 +342,5 @@ public class ChatService {
     private PurchasePost getPurchasePost(Long roomId) {
         return purchasePostRepository.findByChatRoomId(roomId)
                 .orElseThrow(() -> new EntityNotFoundException("room cannot find"));
-    }
-
-    private static Map<Long, Set<String>> onlineMembers(ChatRoomType type) {
-        return type == ChatRoomType.MANAGER
-                ? ManagerChatRoomLifecycle.ManagerRoomParticipants
-                : ManagerChatRoomLifecycle.PurchaseRoomParticipants;
     }
 }

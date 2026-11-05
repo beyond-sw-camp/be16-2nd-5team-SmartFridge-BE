@@ -121,6 +121,7 @@ public class PurchaseChatController {
     public ResponseEntity<?> completePurchase(@PathVariable Long roomId) {
         return new ResponseEntity<>(CommonDto.builder()
                 .result(chatService.completePurchase(roomId))
+                .status_code(HttpStatus.OK.value())
                 .status_message("채팅방 종료 완료")
                 .build(), HttpStatus.OK);
     }
