@@ -34,6 +34,10 @@ public class ManagerChatRoomLifecycle {
     public static Map<Long, Set<String>> ManagerRoomParticipants = new ConcurrentHashMap<>();
     public static Map<Long, Set<String>> PurchaseRoomParticipants = new ConcurrentHashMap<>();
 
+    public static Map<Long, Set<String>> onlineMembers(ChatRoomType type) {
+        return type == ChatRoomType.MANAGER ? ManagerRoomParticipants : PurchaseRoomParticipants;
+    }
+
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final ChatMessageRepository chatMessageRepository;
