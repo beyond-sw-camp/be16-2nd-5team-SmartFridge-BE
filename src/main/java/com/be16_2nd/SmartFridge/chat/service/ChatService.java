@@ -220,7 +220,10 @@ public class ChatService {
 
     // 공동 구매 채팅방에 참여자 추가
     public void addParticipantToPurchaseChat(Long roomId){
-        ChatRoom chatRoom = getRoom(roomId, ChatRoomType.PURCHASE);
+        // 방 행을 잠가서 동시에 참여해도 정원 확인과 추가가 한 명씩 처리되게 한다
+        // (잠금이 이 트랜잭션의 첫 조회여야 이후 조회가 앞선 참여 결과를 본다)
+        ChatRoom chatRoom = chatRoomRepository.findByIdAndTypeForUpdate(roomId, ChatRoomType.PURCHASE)
+                .orElseThrow(() -> new EntityNotFoundException("room cannot find"));
         Member member = currentMember();
 
         // 해당 냉장고 참여자인지 확인
@@ -231,6 +234,9 @@ public class ChatService {
             return;
         }
         PurchasePost post = chatRoom.getPurchasePost();
+        if (post.getJoinStatus() != JoinStatus.OPEN || !post.getIsActive()) {
+            throw new IllegalArgumentException("모집이 끝난 공동구매입니다");
+        }
         if (post.isFull()) {
             throw new IllegalArgumentException("정원이 초과되었습니다");
         }
