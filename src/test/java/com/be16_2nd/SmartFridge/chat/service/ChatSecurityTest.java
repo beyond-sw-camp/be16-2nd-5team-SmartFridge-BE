@@ -122,6 +122,15 @@ class ChatSecurityTest {
     }
 
     @Test
+    void 모집이_끝난_공동구매에는_참여할_수_없다() {
+        chatService.completePurchase(purchaseRoomId); // a(방장)가 마감
+
+        login("b@sec.com");
+        assertThatThrownBy(() -> chatService.addParticipantToPurchaseChat(purchaseRoomId))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void STOMP_인증되지_않은_세션의_SEND와_SUBSCRIBE는_거부된다() {
         assertThatThrownBy(() -> stompHandler.preSend(frame(StompCommand.SEND, "/publish/chat/PURCHASE/" + purchaseRoomId, null), null))
                 .isInstanceOf(AccessDeniedException.class);
