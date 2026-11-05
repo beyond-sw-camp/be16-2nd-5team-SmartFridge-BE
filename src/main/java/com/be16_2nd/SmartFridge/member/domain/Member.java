@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(
+        name = "uk_member_social_type_id",
+        columnNames = {"social_type", "social_id"}))
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -41,9 +44,13 @@ public class Member extends BaseTimeEntity {
 
     private String profileImage;
 
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<SocialAccount> socialAccounts = new ArrayList<>();
+    // 가입한 소셜 계정 (회원 1명 = 소셜 계정 1개, 관리자는 null)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "social_type", length = 20)
+    private SocialType socialType;
+
+    @Column(name = "social_id")
+    private String socialId;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -88,15 +95,6 @@ public class Member extends BaseTimeEntity {
     @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<PurchasePost> purchasePosts = new ArrayList<>();
-
-
-    public void linkSocialAccount(SocialType socialType, String socialId) {
-        this.socialAccounts.add(SocialAccount.builder()
-                .member(this)
-                .socialType(socialType)
-                .socialId(socialId)
-                .build());
-    }
 
     public void updateName(String name){
         this.name = name;
